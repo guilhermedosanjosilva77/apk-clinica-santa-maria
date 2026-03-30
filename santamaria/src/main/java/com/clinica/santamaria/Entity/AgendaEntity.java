@@ -5,6 +5,7 @@ import com.clinica.santamaria.Enum.Status;
 import com.clinica.santamaria.Enum.TipoConsulta;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -31,19 +32,24 @@ public class AgendaEntity {
     private LocalDate dataNascimento;
 
     //Tipo de Consulta Particular ou Unimed
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     @NotBlank
     private TipoConsulta tipoConsulta;
 
     //Status Pendente,Cancelado,Concluido
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     @NotBlank
     private Status status;
 
     //Tabela associativa com paciente
     @ManyToOne 
-    @JoinColumn(name = "agenda")
+    @JoinColumn(name = "agendaID")
     private PacienteEntity paciente;
+
+    
+
+    public AgendaEntity() {
+    }
 
     public AgendaEntity(Long idAgenda, String nome, LocalDate dataNascimento, TipoConsulta tipoConsulta, Status status,
             PacienteEntity paciente) {

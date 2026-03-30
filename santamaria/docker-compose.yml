@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  db_santa_maria:
+    image: mysql:8.0
+    container_name: mysql_santa_maria
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    ports:
+      - "${DB_PORT}:3306"
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
+
+  adminer:
+    image: adminer
+    container_name: adminer_santa_maria
+    restart: always
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db_santa_maria
+
+  api_santa_maria:
+    build: .
+    container_name: spring_api_santa_maria
+    ports:
+      - "${APP_PORT}:8080"
+    depends_on:
+      db_santa_maria:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db_santa_maria:3306/${DB_NAME}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=${DB_ROOT_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQLDialect

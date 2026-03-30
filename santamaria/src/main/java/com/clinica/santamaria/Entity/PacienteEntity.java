@@ -19,6 +19,6 @@ public class PacienteEntity {
     
     @OneToMany
     @JoinColumn (name = "paciente")
-    private List<AgendaEntity> agenda;
+    private List<AgendaEntity> agendaID;
     
 }
