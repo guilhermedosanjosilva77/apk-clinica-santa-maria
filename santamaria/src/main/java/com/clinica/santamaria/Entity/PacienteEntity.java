@@ -41,7 +41,6 @@ public class PacienteEntity {
     private String CPF;
 
     //Numero do prontuario da paciente
-    @NotNull
     private Integer numeroProntuario;
 
     //Estado civil
@@ -53,14 +52,12 @@ public class PacienteEntity {
     private String email;
 
     //Celular
-    @NotBlank(message = "O celular é obrigatório")
     @Pattern(
         regexp = "^\\([1-9]{2}\\) (?:[2-8]|9[1-9])[0-9]{3}\\-[0-9]{4}$"
     )
     private String celular;
 
     //Profissao
-    @NotBlank
     private String profissao;
 
     //Tabela relacional com agenda, cria uma lista de todas as consultas que a paciente ja agendou
