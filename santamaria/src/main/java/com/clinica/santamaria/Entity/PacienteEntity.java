@@ -7,13 +7,13 @@ import org.hibernate.validator.constraints.br.CPF;
 
 import com.clinica.santamaria.Enum.EstadoCivil;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
@@ -60,17 +60,23 @@ public class PacienteEntity {
     //Profissao
     private String profissao;
 
-    //Tabela relacional com agenda, cria uma lista de todas as consultas que a paciente ja agendou
-    @OneToMany
-    @JoinColumn (name = "paciente")
-    private List<AgendaEntity> agendaID;
+    private LocalDate dataCadastro;
 
-    
+    private String endereco;
+
+    //Lista de consultas atribuidas a uma paciente
+    @OneToMany(mappedBy = "paciente", cascade = CascadeType.ALL)
+    private List<ConsultaEntity> consultas;
+
+    public PacienteEntity() {
+    }
 
     public PacienteEntity(Long idPaciente, @NotBlank String nome, @NotNull LocalDate dataNascimento,
-            @org.hibernate.validator.constraints.br.CPF String cPF, @NotNull Integer numeroProntuario,
-            EstadoCivil estadoCivil, @Email String email, String celular, @NotBlank String profissao,
-            List<AgendaEntity> agendaID) {
+            @org.hibernate.validator.constraints.br.CPF(message = "O CPF tem que ser válido") String cPF,
+            Integer numeroProntuario, EstadoCivil estadoCivil,
+            @Email(message = "O email tem que ser válido") String email,
+            @Pattern(regexp = "^\\([1-9]{2}\\) (?:[2-8]|9[1-9])[0-9]{3}\\-[0-9]{4}$") String celular, String profissao,
+            LocalDate dataCadastro, String endereco, List<ConsultaEntity> consultas) {
         this.idPaciente = idPaciente;
         this.nome = nome;
         this.dataNascimento = dataNascimento;
@@ -80,10 +86,9 @@ public class PacienteEntity {
         this.email = email;
         this.celular = celular;
         this.profissao = profissao;
-        this.agendaID = agendaID;
-    }
-
-    public PacienteEntity() {
+        this.dataCadastro = dataCadastro;
+        this.endereco = endereco;
+        this.consultas = consultas;
     }
 
     public Long getIdPaciente() {
@@ -158,17 +163,30 @@ public class PacienteEntity {
         this.profissao = profissao;
     }
 
-    public List<AgendaEntity> getAgendaID() {
-        return agendaID;
+    public LocalDate getDataCadastro() {
+        return dataCadastro;
     }
 
-    public void setAgendaID(List<AgendaEntity> agendaID) {
-        this.agendaID = agendaID;
+    public void setDataCadastro(LocalDate dataCadastro) {
+        this.dataCadastro = dataCadastro;
     }
-    
-    
-    
 
+    public String getEndereco() {
+        return endereco;
+    }
 
-    
+    public void setEndereco(String endereco) {
+        this.endereco = endereco;
+    }
+
+    public List<ConsultaEntity> getConsultas() {
+        return consultas;
+    }
+
+    public void setConsultas(List<ConsultaEntity> consultas) {
+        this.consultas = consultas;
+    }
+
 }
+
+   

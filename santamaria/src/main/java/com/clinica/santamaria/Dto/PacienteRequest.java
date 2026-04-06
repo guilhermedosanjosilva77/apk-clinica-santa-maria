@@ -6,6 +6,7 @@ import java.util.List;
 import org.hibernate.validator.constraints.br.CPF;
 
 import com.clinica.santamaria.Entity.AgendaEntity;
+import com.clinica.santamaria.Entity.ConsultaEntity;
 import com.clinica.santamaria.Enum.EstadoCivil;
 
 import jakarta.persistence.EnumType;
@@ -39,7 +40,8 @@ public record PacienteRequest(
 
     String celular,
     String profissao,
-    List<AgendaEntity> agendaID
+    LocalDate dataCadastro,
+    String endereco
     
 
 ) {
