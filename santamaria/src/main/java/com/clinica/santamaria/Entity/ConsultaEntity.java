@@ -22,6 +22,8 @@ public class ConsultaEntity {
     @NotNull
     private LocalDate dataConsulta;
 
+    private String horario;
+
     //Consulta pré natal
     private boolean consultaPreNatal;
 
@@ -34,47 +36,123 @@ public class ConsultaEntity {
 
     
 
+    
+
     public ConsultaEntity() {
     }
 
-    public ConsultaEntity(Long consultaID, LocalDate dataConsulta, boolean consultaPreNatal, String retorno) {
+    public ConsultaEntity(Long consultaID, @NotNull LocalDate dataConsulta, String horario, boolean consultaPreNatal,
+            String retorno, PacienteEntity pacienteEntity) {
         this.consultaID = consultaID;
         this.dataConsulta = dataConsulta;
+        this.horario = horario;
         this.consultaPreNatal = consultaPreNatal;
         this.retorno = retorno;
+        this.pacienteEntity = pacienteEntity;
     }
+
+
+
+
+
+
 
     public Long getConsultaID() {
         return consultaID;
     }
 
+
+
+
+
     public void setConsultaID(Long consultaID) {
         this.consultaID = consultaID;
     }
+
+
+
+
 
     public LocalDate getDataConsulta() {
         return dataConsulta;
     }
 
+
+
+
+
     public void setDataConsulta(LocalDate dataConsulta) {
         this.dataConsulta = dataConsulta;
     }
+
+
+
+
+
+    public String getHorario() {
+        return horario;
+    }
+
+
+
+
+
+    public void setHorario(String horario) {
+        this.horario = horario;
+    }
+
+
+
+
 
     public boolean isConsultaPreNatal() {
         return consultaPreNatal;
     }
 
+
+
+
+
     public void setConsultaPreNatal(boolean consultaPreNatal) {
         this.consultaPreNatal = consultaPreNatal;
     }
+
+
+
+
 
     public String getRetorno() {
         return retorno;
     }
 
+
+
+
+
     public void setRetorno(String retorno) {
         this.retorno = retorno;
     }
+
+
+
+
+
+    public PacienteEntity getPacienteEntity() {
+        return pacienteEntity;
+    }
+
+
+
+
+
+    public void setPacienteEntity(PacienteEntity pacienteEntity) {
+        this.pacienteEntity = pacienteEntity;
+    }
+
+    
+
+    
+   
 
     
     

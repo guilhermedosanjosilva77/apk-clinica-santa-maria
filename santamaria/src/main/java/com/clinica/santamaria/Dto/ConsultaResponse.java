@@ -12,7 +12,9 @@ public record ConsultaResponse(
 
     String retorno,
 
-    PacienteEntity paciente
+    PacienteEntity paciente,
+
+    String horario
 
 ) {
 } 
