@@ -8,8 +8,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "consulta")
@@ -18,10 +18,14 @@ public class ConsultaEntity {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long consultaID;
 
+    //Data da consulta que a paciente irá agendar
+    @NotNull
     private LocalDate dataConsulta;
 
+    //Consulta pré natal
     private boolean consultaPreNatal;
 
+    //Retorno
     private String retorno;
 
     @ManyToOne
