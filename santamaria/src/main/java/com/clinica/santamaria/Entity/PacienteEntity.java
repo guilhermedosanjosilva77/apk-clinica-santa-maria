@@ -36,9 +36,9 @@ public class PacienteEntity {
     @NotNull
     private LocalDate dataNascimento;
     
-    //CPF
-    @CPF(message = "O CPF tem que ser válido")
-    private String CPF;
+    //cpf
+    @CPF(message = "O cpf tem que ser válido")
+    private String cpf;
 
     //Numero do prontuario da paciente
     private Integer numeroProntuario;
@@ -60,19 +60,21 @@ public class PacienteEntity {
     //Profissao
     private String profissao;
 
+    //Data de Cdastro da paciente no sistema
     private LocalDate dataCadastro;
 
+    //Endereço
     private String endereco;
 
     //Lista de consultas atribuidas a uma paciente
-    @OneToMany(mappedBy = "paciente", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "pacienteEntity", cascade = CascadeType.ALL)
     private List<ConsultaEntity> consultas;
 
     public PacienteEntity() {
     }
 
     public PacienteEntity(Long idPaciente, @NotBlank String nome, @NotNull LocalDate dataNascimento,
-            @org.hibernate.validator.constraints.br.CPF(message = "O CPF tem que ser válido") String cPF,
+            @org.hibernate.validator.constraints.br.CPF(message = "O cpf tem que ser válido") String cpf,
             Integer numeroProntuario, EstadoCivil estadoCivil,
             @Email(message = "O email tem que ser válido") String email,
             @Pattern(regexp = "^\\([1-9]{2}\\) (?:[2-8]|9[1-9])[0-9]{3}\\-[0-9]{4}$") String celular, String profissao,
@@ -80,7 +82,7 @@ public class PacienteEntity {
         this.idPaciente = idPaciente;
         this.nome = nome;
         this.dataNascimento = dataNascimento;
-        CPF = cPF;
+        this.cpf = cpf;
         this.numeroProntuario = numeroProntuario;
         this.estadoCivil = estadoCivil;
         this.email = email;
@@ -115,12 +117,12 @@ public class PacienteEntity {
         this.dataNascimento = dataNascimento;
     }
 
-    public String getCPF() {
-        return CPF;
+    public String getCpf() {
+        return cpf;
     }
 
-    public void setCPF(String cPF) {
-        CPF = cPF;
+    public void setCpf(String cpf) {
+        this.cpf = cpf;
     }
 
     public Integer getNumeroProntuario() {

@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,7 +25,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 
 @RestController
-@RequestMapping(name = "/paciente")
+@RequestMapping(value = "/paciente")
 
 public class PacienteController {
 
@@ -68,8 +67,8 @@ public PacienteResponse atualizar(@PathVariable Long idPaciente, @RequestBody Pa
 
 //DELETE
 @DeleteMapping("/{idPaciente}")
-public void deletar(Long idPaciente){
-    pacienteService.deletar(idPaciente);
+public void deletar(@PathVariable Long idPaciente){
+    pacienteService.deletar(idPaciente);;
 
 
 }
