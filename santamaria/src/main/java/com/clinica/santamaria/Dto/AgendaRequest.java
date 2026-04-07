@@ -11,7 +11,8 @@ public record AgendaRequest(
     LocalDate dataNascimento,
     TipoConsulta tipoConsulta,
     Status status,
-    PacienteEntity pacienteEntity
+    PacienteEntity pacienteEntity,
+    LocalDate dataConsulta
     
 
 

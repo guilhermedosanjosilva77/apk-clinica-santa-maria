@@ -31,6 +31,8 @@ public class AgendaEntity {
     @NotNull
     private LocalDate dataNascimento;
 
+    private LocalDate dataAgendamento;
+
     //Tipo de Consulta Particular ou Unimed
     @Enumerated(EnumType.STRING)
     @NotBlank
@@ -52,13 +54,14 @@ public class AgendaEntity {
     }
 
     public AgendaEntity(Long idAgenda, String nome, LocalDate dataNascimento, TipoConsulta tipoConsulta, Status status,
-            PacienteEntity paciente) {
+            PacienteEntity paciente, LocalDate dataAgendamento) {
         this.idAgenda = idAgenda;
         this.nome = nome;
         this.dataNascimento = dataNascimento;
         this.tipoConsulta = tipoConsulta;
         this.status = status;
         this.paciente = paciente;
+        this.dataAgendamento = dataAgendamento;
     }
 
     public Long getIdAgenda() {
@@ -108,6 +111,16 @@ public class AgendaEntity {
     public void setPaciente(PacienteEntity paciente) {
         this.paciente = paciente;
     }
+
+    public LocalDate getDataAgendamento() {
+        return dataAgendamento;
+    }
+
+    public void setDataAgendamento(LocalDate dataAgendamento) {
+        this.dataAgendamento = dataAgendamento;
+    }
+
+    
 
     
 

@@ -12,7 +12,8 @@ public record ConsultaResponse(
 
     String retorno,
 
-    PacienteEntity paciente,
+    PacienteSimplificado pacienteSimplificado,
+
 
     String horario
 

@@ -9,5 +9,7 @@ import com.clinica.santamaria.Entity.AgendaEntity;
 
 public interface AgendaRepository extends JpaRepository <AgendaEntity,Long> {
 
+    List<AgendaEntity> findByPacienteIdPaciente(Long idPaciente);
+
     
 } 

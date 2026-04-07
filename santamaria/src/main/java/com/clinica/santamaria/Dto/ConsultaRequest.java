@@ -23,5 +23,6 @@ public record ConsultaRequest(
     LocalDate dataNascimento,
 
     TipoConsulta tipoConsulta
+
 ) {
 }
