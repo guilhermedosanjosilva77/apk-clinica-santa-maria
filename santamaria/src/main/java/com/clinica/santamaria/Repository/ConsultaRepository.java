@@ -9,8 +9,5 @@ import java.time.LocalDate;
 
 public interface ConsultaRepository extends JpaRepository <ConsultaEntity,Long> {
 
- //Atributo para contar a quantidade de retornos por ID   
-int countByIdPacienteEntityIdPacienteRetorno(Long idPaciente, String retorno);    
-
 List<ConsultaEntity> findByDataConsulta(LocalDate dataConsulta);
 }

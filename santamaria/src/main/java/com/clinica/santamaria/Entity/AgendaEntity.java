@@ -35,12 +35,11 @@ public class AgendaEntity {
 
     //Tipo de Consulta Particular ou Unimed
     @Enumerated(EnumType.STRING)
-    @NotBlank
+    @NotNull
     private TipoConsulta tipoConsulta;
 
     //Status Pendente,Cancelado,Concluido
     @Enumerated(EnumType.STRING)
-    @NotBlank
     private Status status;
 
     //Tabela associativa com paciente

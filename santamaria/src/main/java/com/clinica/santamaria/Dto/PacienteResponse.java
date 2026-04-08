@@ -17,8 +17,7 @@ public record PacienteResponse(
     String celular,
     String profissao,
     //Retorna todas as consultas que serão alocadas ao id de uma das pacientes
-    List<ConsultaEntity> consultaID
-
+    List<ConsultaSimplificado> consultaSimplificado
 
 ) {
 } 

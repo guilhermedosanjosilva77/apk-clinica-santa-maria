@@ -55,6 +55,17 @@ public class ConsultaService {
             throw new RuntimeException("Não é possível agendar: limite de 2 retornos excedido.");
         }
     }
+    if (consultaRequest.paciente() != null) {
+    System.out.println("DEBUG: Buscando paciente com ID: " + consultaRequest.paciente());
+    
+    paciente = pacienteRepository.findById(consultaRequest.paciente())
+        .orElseThrow(() -> {
+            System.out.println("DEBUG: ID " + consultaRequest.paciente() + " NÃO foi encontrado no banco.");
+            return new RuntimeException("Erro ao encontrar ID: " + consultaRequest.paciente());
+        });
+    
+    System.out.println("DEBUG: Paciente encontrado: " + paciente.getNome());
+}
 
         //Salvar a consulta
         ConsultaEntity consultaEntity = new ConsultaEntity();
@@ -72,6 +83,7 @@ public class ConsultaService {
         agenda.setNome(paciente.getNome());
         agenda.setDataNascimento(paciente.getDataNascimento());
         agenda.setTipoConsulta(consultaRequest.tipoConsulta());
+        agenda.setDataAgendamento(consultaRequest.dataConsulta());
         agenda.setStatus(Status.Pendente);
 
         agendaRepository.save(agenda);

@@ -181,12 +181,12 @@ public class PacienteEntity {
         this.endereco = endereco;
     }
 
-    public List<ConsultaEntity> getConsultas() {
-        return consultas;
-    }
-
     public void setConsultas(List<ConsultaEntity> consultas) {
         this.consultas = consultas;
+    }
+
+    public List<ConsultaEntity> getConsultas() {
+        return consultas;
     }
 
 }
