@@ -1,0 +1,340 @@
+/* Variáveis de cores para facilitar mudanças */
+:root {
+  --azul-clinica: #1a5276;
+  --azul-hover: #154360;
+  --vinho-deletar: #7b0d0d;
+  --cinza-fundo: #f4f7f6;
+  --cinza-borda: #e0e0e0;
+  --branco: #ffffff;
+}
+
+/* Reset básico e corpo */
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--cinza-fundo);
+}
+
+.app-container {
+  min-height: 100vh;
+}
+
+/* NAVBAR - Topo azul */
+.navbar {
+  background-color: var(--azul-clinica);
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.nav-brand {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.nav-links {
+  display: flex;
+  gap: 10px;
+}
+
+.nav-item {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.4);
+  color: white;
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-item:hover {
+  background-color: rgba(255,255,255,0.1);
+}
+
+.nav-item.active {
+  background-color: #2c3e50;
+  border-color: white;
+}
+
+/* CONTEÚDO CENTRAL */
+.content {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 0 20px;
+}
+
+/* HEADER DA AGENDA - Parte branca abaixo da nav */
+.agenda-header {
+  background-color: var(--branco);
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border: 1px solid var(--cinza-borda);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+}
+
+.main-title {
+  color: var(--azul-clinica);
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.subtitle {
+  color: #999;
+  font-size: 0.85rem;
+}
+
+/* DATE PICKER CUSTOMIZADO */
+.date-picker-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #f9f9f9;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.input-group label {
+  display: block;
+  font-size: 9px;
+  font-weight: bold;
+  color: #888;
+  margin-bottom: 2px;
+}
+
+.input-group input {
+  border: none;
+  background: transparent;
+  color: var(--azul-clinica);
+  font-weight: bold;
+  outline: none;
+  cursor: pointer;
+}
+
+/* TABELA DE CONSULTAS */
+.agenda-table {
+  background-color: var(--branco);
+  border: 1px solid var(--cinza-borda);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.table-thead {
+  background-color: var(--azul-clinica);
+  color: white;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.th-hora, .th-paciente {
+  padding: 10px 20px;
+}
+
+.th-hora {
+  text-align: center;
+  border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+/* LINHAS DA TABELA */
+.table-row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  min-height: 80px;
+  border-bottom: 1px solid #eee;
+}
+
+.cell-hora {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #555;
+  font-size: 1.1rem;
+  background-color: #fcfcfc;
+  border-right: 1px solid #eee;
+}
+
+.cell-paciente {
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.paciente-info .nome {
+  display: block;
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #333;
+  text-transform: uppercase;
+}
+
+.paciente-info .detalhes {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+/* BOTÃO DELETAR - Vinho do Figma */
+.btn-deletar {
+  background-color: var(--vinho-deletar);
+  color: white;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-deletar:hover {
+  background-color: #5e0a0a;
+}
+
+/* LINHA DE ENCAIXE - Estilo sutil do design */
+.row-encaixe {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  height: 35px;
+  background-color: #fafafa;
+  border-bottom: 1px solid #eee;
+}
+
+.label-encaixe {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #ccc;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-style: italic;
+  border-right: 1px solid #eee;
+}
+
+/* Estado vazio */
+.empty-state {
+  padding: 50px;
+  text-align: center;
+  color: #bbb;
+  background-color: #fff;
+}
+
+/* ESTILOS DA TELA DE CADASTRO */
+.cadastro-card {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid var(--cinza-borda);
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+.form-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 25px;
+    border-bottom: 1px solid #eee;
+}
+
+.icon-circle {
+    background: #f0f7ff;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #d0e3f0;
+}
+
+.form-header h2 {
+    color: #333;
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.form-section-title {
+    background-color: #d6e4ef; /* Azul claro do seu print */
+    color: var(--azul-clinica);
+    padding: 8px 25px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.paciente-form {
+    padding-bottom: 30px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    padding: 25px;
+}
+
+.input-block {
+    margin-bottom: 15px;
+}
+
+.input-block label {
+    display: block;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.input-block input, .input-block select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box; /* Garante que o padding não quebre a largura */
+}
+
+.input-block input:focus {
+    border-color: var(--azul-clinica);
+    outline: none;
+}
+
+.form-footer {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.btn-cadastrar {
+    background-color: var(--azul-clinica);
+    color: white;
+    border: none;
+    padding: 12px 40px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: filter 0.2s;
+}
+
+.btn-cadastrar:hover {
+    filter: brightness(1.2);
+}
+
+.mask-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
