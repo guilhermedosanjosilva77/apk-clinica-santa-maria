@@ -66,6 +66,12 @@ public class PacienteEntity {
     //Endereço
     private String endereco;
 
+    //Mensgame opcional de paciente
+    private String mensagem;
+
+    @OneToMany(mappedBy ="pacienteEntity", cascade = CascadeType.ALL)
+    private List<ExamesEntity> exames;
+
     //Lista de consultas atribuidas a uma paciente
     @OneToMany(mappedBy = "pacienteEntity", cascade = CascadeType.ALL)
     private List<ConsultaEntity> consultas;
@@ -78,7 +84,7 @@ public class PacienteEntity {
             Integer numeroProntuario, EstadoCivil estadoCivil,
             @Email(message = "O email tem que ser válido") String email,
             @Pattern(regexp = "^\\([1-9]{2}\\) (?:[2-8]|9[1-9])[0-9]{3}\\-[0-9]{4}$") String celular, String profissao,
-            LocalDate dataCadastro, String endereco, List<ConsultaEntity> consultas) {
+            LocalDate dataCadastro, String endereco,String mensagem, List<ConsultaEntity> consultas,List<ExamesEntity> exames) {
         this.idPaciente = idPaciente;
         this.nome = nome;
         this.dataNascimento = dataNascimento;
@@ -91,6 +97,8 @@ public class PacienteEntity {
         this.dataCadastro = dataCadastro;
         this.endereco = endereco;
         this.consultas = consultas;
+        this.mensagem = mensagem;
+        this.exames = exames;
     }
 
     public Long getIdPaciente() {
@@ -188,6 +196,26 @@ public class PacienteEntity {
     public List<ConsultaEntity> getConsultas() {
         return consultas;
     }
+
+    public String getMensagem() {
+        return mensagem;
+    }
+
+    public void setMensagem(String mensagem) {
+        this.mensagem = mensagem;
+    }
+
+    public List<ExamesEntity> getExames() {
+        return exames;
+    }
+
+    public void setExames(List<ExamesEntity> exames) {
+        this.exames = exames;
+    }
+
+    ''
+
+    
 
 }
 

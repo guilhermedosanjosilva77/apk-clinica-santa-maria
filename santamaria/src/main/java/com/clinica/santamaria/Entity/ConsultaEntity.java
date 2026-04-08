@@ -1,13 +1,16 @@
 package com.clinica.santamaria.Entity;
 
 import java.time.LocalDate;
+import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
@@ -30,9 +33,11 @@ public class ConsultaEntity {
     //Retorno
     private String retorno;
 
+    //Associacao de tabela com Paciente, recebendo um DTO do paciente associado a consulta
     @ManyToOne
     @JoinColumn(name = "idPaciente")
     private PacienteEntity pacienteEntity;
+
 
     
 
@@ -149,6 +154,7 @@ public class ConsultaEntity {
         this.pacienteEntity = pacienteEntity;
     }
 
+    
     
 
     

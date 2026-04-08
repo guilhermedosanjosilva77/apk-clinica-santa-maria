@@ -36,6 +36,7 @@ public class PacienteService {
         paciente.setEstadoCivil(pacienteRequest.estadoCivil());
         paciente.setNumeroProntuario(pacienteRequest.numeroProntuario());
         paciente.setProfissao(pacienteRequest.profissao());
+        paciente.setProfissao(pacienteRequest.mensagem());
 
         pacienteRepository.save(paciente);
 
@@ -79,6 +80,7 @@ public class PacienteService {
         pacienteExistente.setEstadoCivil(pacienteRequest.estadoCivil());
         pacienteExistente.setNumeroProntuario(pacienteRequest.numeroProntuario());
         pacienteExistente.setProfissao(pacienteRequest.profissao());
+        pacienteExistente.setMensagem(pacienteRequest.mensagem());
 
         pacienteRepository.save(pacienteExistente);
 
@@ -115,6 +117,7 @@ public class PacienteService {
                 paciente.getEmail(),
                 paciente.getCelular(),
                 paciente.getProfissao(),
+                paciente.getMensagem(),
                 consultaSimplificado
         );
     }

@@ -39,7 +39,8 @@ public record PacienteRequest(
     String celular,
     String profissao,
     LocalDate dataCadastro,
-    String endereco
+    String endereco,
+    String mensagem
     
 
 ) {

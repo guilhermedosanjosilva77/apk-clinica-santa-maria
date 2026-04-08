@@ -1,9 +1,7 @@
 package com.clinica.santamaria.Dto;
 
 import java.time.LocalDate;
-import java.util.List;
 
-import com.clinica.santamaria.Entity.PacienteEntity;
 
 public record ConsultaResponse(
      Long consultaID,
