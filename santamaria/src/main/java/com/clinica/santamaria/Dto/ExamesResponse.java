@@ -8,13 +8,13 @@ import jakarta.validation.constraints.NotNull;
 
 public record ExamesResponse(
     Long examesId,
-    
+
     @NotNull
     LocalDate dataColeta,
 
     @NotNull
     LocalDate dataChegada,
 
-    PacienteEntity pacienteEntity
+    PacienteSimplificado PacienteSimplificado
 ) {
 } 
