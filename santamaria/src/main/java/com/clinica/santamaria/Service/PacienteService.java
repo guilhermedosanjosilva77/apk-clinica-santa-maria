@@ -1,12 +1,15 @@
 package com.clinica.santamaria.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.clinica.santamaria.Dto.ConsultaSimplificado;
+import com.clinica.santamaria.Dto.ExamesResponse;
+import com.clinica.santamaria.Dto.ExamesSimplificado;
 import com.clinica.santamaria.Dto.PacienteRequest;
 import com.clinica.santamaria.Dto.PacienteResponse;
 import com.clinica.santamaria.Entity.PacienteEntity;
@@ -107,6 +110,19 @@ public class PacienteService {
         ))
         .collect(Collectors.toList());
 
+        List<ExamesSimplificado> examesSimplificados = new ArrayList<>();
+    if (paciente.getExames() != null) {
+        examesSimplificados = paciente.getExames().stream()
+            .map(exame -> new ExamesSimplificado(
+                exame.getExamesId(),
+                exame.getDataColeta(),
+                exame.getDataChegada()
+            ))
+            .collect(Collectors.toList());
+    }
+
+     
+
         return new PacienteResponse(
                 paciente.getIdPaciente(),
                 paciente.getNome(),
@@ -118,7 +134,8 @@ public class PacienteService {
                 paciente.getCelular(),
                 paciente.getProfissao(),
                 paciente.getMensagem(),
-                consultaSimplificado
+                consultaSimplificado,
+                examesSimplificados
         );
     }
 }

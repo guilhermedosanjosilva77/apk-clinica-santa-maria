@@ -4,15 +4,15 @@ import java.time.LocalDate;
 
 import jakarta.validation.constraints.NotNull;
 
-public record ExamesResponse(
+public record ExamesSimplificado(
+
     Long examesId,
 
     @NotNull
     LocalDate dataColeta,
 
     @NotNull
-    LocalDate dataChegada,
+    LocalDate dataChegada
 
-    PacienteSimplificado PacienteSimplificado
 ) {
-} 
+}

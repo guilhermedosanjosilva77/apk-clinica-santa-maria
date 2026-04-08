@@ -1,0 +1,58 @@
+package com.clinica.santamaria.Controller;
+
+import java.util.List;
+
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.clinica.santamaria.Dto.ExamesRequest;
+import com.clinica.santamaria.Dto.ExamesResponse;
+import com.clinica.santamaria.Service.ExamesService;
+
+@RestController
+@RequestMapping(value = "exames")
+public class ExamesController {
+    private final ExamesService examesService;
+
+    public ExamesController(ExamesService examesService) {
+        this.examesService = examesService;
+    }
+
+    // Criar novo exame
+    @PostMapping
+    public ExamesResponse criar(@RequestBody ExamesRequest request) {
+        return examesService.criar(request);
+    }
+
+    // Listar todos os exames
+    @GetMapping
+    public List<ExamesResponse> listar() {
+        return examesService.listarTodos();
+    }
+
+    // Buscar exame por ID (Ex: /exames/1)
+    @GetMapping("/{id}")
+    public ExamesResponse buscarPorId(@PathVariable Long id) {
+        return examesService.buscarPorId(id);
+    }
+
+    // Atualizar exame (Ex: /exames/1)
+    @PutMapping("/{id}")
+    public ExamesResponse atualizar(@PathVariable Long id, @RequestBody ExamesRequest request) {
+        return examesService.atualizar(id, request);
+    }
+
+    // Deletar exame (Ex: /exames/1)
+    @DeleteMapping("/{id}")
+    public void deletar(@PathVariable Long id) {
+        examesService.deletar(id);
+    }
+}
+    
+
