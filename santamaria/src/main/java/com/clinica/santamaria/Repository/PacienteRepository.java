@@ -10,6 +10,7 @@ import com.clinica.santamaria.Entity.PacienteEntity;
 public interface PacienteRepository extends JpaRepository<PacienteEntity,Long> {
         //BUSCA TODOS OS PACIENTES PELA DATA DE NASCIMENTO
         List<PacienteEntity>findByDataNascimento (LocalDate dataNascimento);
+        boolean existexistsBycpf(String cpf);
 
 
     

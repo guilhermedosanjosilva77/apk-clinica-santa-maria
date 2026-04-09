@@ -37,21 +37,21 @@ public class ExamesController {
     }
 
     // Buscar exame por ID (Ex: /exames/1)
-    @GetMapping("/{id}")
-    public ExamesResponse buscarPorId(@PathVariable Long id) {
-        return examesService.buscarPorId(id);
+    @GetMapping("/{examesId}")
+    public ExamesResponse buscarPorId(@PathVariable Long examesId) {
+        return examesService.buscarPorId(examesId);
     }
 
     // Atualizar exame (Ex: /exames/1)
-    @PutMapping("/{id}")
-    public ExamesResponse atualizar(@PathVariable Long id, @RequestBody ExamesRequest request) {
-        return examesService.atualizar(id, request);
+    @PutMapping("/{examesId}")
+    public ExamesResponse atualizar(@PathVariable Long examesId, @RequestBody ExamesRequest request) {
+        return examesService.atualizar(examesId, request);
     }
 
     // Deletar exame (Ex: /exames/1)
-    @DeleteMapping("/{id}")
-    public void deletar(@PathVariable Long id) {
-        examesService.deletar(id);
+    @DeleteMapping("/{examesID}")
+    public void deletar(@PathVariable Long examesId) {
+        examesService.deletar(examesId);
     }
 }
     

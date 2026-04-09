@@ -58,8 +58,8 @@ public class ExamesService {
     }
 
     // UPDATE
-    public ExamesResponse atualizar(Long id, ExamesRequest examesRequest) {
-        ExamesEntity exame = examesRepository.findById(id)
+    public ExamesResponse atualizar(Long examesId, ExamesRequest examesRequest) {
+        ExamesEntity exame = examesRepository.findById(examesId)
                 .orElseThrow(() -> new RuntimeException("Exame não encontrado para atualização."));
 
         exame.setDataChegada(examesRequest.dataChegada());
@@ -79,12 +79,12 @@ public class ExamesService {
     }
 
     // DELETE
-    public void deletar(Long id) {
+    public void deletar(Long examesId) {
         // Verifica se existe antes de deletar para evitar erros silenciosos
-        if (!examesRepository.existsById(id)) {
+        if (!examesRepository.existsById(examesId)) {
             throw new RuntimeException("Não foi possível deletar: Exame não encontrado.");
         }
-        examesRepository.deleteById(id);
+        examesRepository.deleteById(examesId);
     }
 
 private ExamesResponse paraDTO(ExamesEntity exame) {

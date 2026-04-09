@@ -29,6 +29,13 @@ public class PacienteService {
     public PacienteResponse criar(PacienteRequest pacienteRequest) {
         PacienteEntity paciente = new PacienteEntity();
 
+        boolean cpfExiste = pacienteRepository.existexistsBycpf(null);
+
+        if (cpfExiste == true) {
+            throw new RuntimeException("Conflito: Já existe um paciente cadastrado com esse CPF");
+            
+        }
+
         paciente.setNome(pacienteRequest.nome());
         paciente.setCpf(pacienteRequest.cpf());
         paciente.setCelular(pacienteRequest.celular());
