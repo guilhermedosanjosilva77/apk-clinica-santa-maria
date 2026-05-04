@@ -10,4 +10,5 @@ import java.time.LocalDate;
 public interface ConsultaRepository extends JpaRepository <ConsultaEntity,Long> {
 
 List<ConsultaEntity> findByDataConsulta(LocalDate dataConsulta);
+List<ConsultaEntity> findByHorario(String horario);
 }

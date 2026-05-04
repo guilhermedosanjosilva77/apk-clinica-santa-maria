@@ -2,6 +2,7 @@ package com.clinica.santamaria.Controller;
 
 import java.util.List;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,6 +16,7 @@ import com.clinica.santamaria.Dto.ExamesRequest;
 import com.clinica.santamaria.Dto.ExamesResponse;
 import com.clinica.santamaria.Service.ExamesService;
 
+@CrossOrigin("*")
 @RestController
 @RequestMapping(value = "exames")
 public class ExamesController {
@@ -41,6 +43,7 @@ public class ExamesController {
     public ExamesResponse buscarPorId(@PathVariable Long examesId) {
         return examesService.buscarPorId(examesId);
     }
+    
 
     // Atualizar exame (Ex: /exames/1)
     @PutMapping("/{examesId}")
@@ -49,7 +52,7 @@ public class ExamesController {
     }
 
     // Deletar exame (Ex: /exames/1)
-    @DeleteMapping("/{examesID}")
+    @DeleteMapping("/{examesId}")
     public void deletar(@PathVariable Long examesId) {
         examesService.deletar(examesId);
     }

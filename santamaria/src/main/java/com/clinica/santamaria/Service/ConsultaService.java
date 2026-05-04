@@ -39,7 +39,7 @@ public class ConsultaService {
             paciente = new PacienteEntity();
             paciente.setNome(consultaRequest.nome());
             paciente.setDataNascimento(consultaRequest.dataNascimento());
-            paciente.setDataCadastro(LocalDate.now());
+            paciente.setDataCadastro(LocalDate.now());  
             paciente = pacienteRepository.save(paciente);
         }
 
@@ -48,18 +48,6 @@ public class ConsultaService {
             if (Integer.parseInt(consultaRequest.retorno()) > 1) {
                 throw new RuntimeException("Não é possível agendar: limite de 1 retornos excedido.");
             }
-        }
-
-        if (consultaRequest.paciente() != null) {
-            System.out.println("DEBUG: Buscando paciente com ID: " + consultaRequest.paciente());
-            
-            paciente = pacienteRepository.findById(consultaRequest.paciente())
-                .orElseThrow(() -> {
-                    System.out.println("DEBUG: ID " + consultaRequest.paciente() + " NÃO foi encontrado no banco.");
-                    return new RuntimeException("Erro ao encontrar ID: " + consultaRequest.paciente());
-                });
-            
-            System.out.println("DEBUG: Paciente encontrado: " + paciente.getNome());
         }
 
         //Salvar a consulta
@@ -89,6 +77,17 @@ public class ConsultaService {
         return dataConsulta.stream()
                 .map(this::paraDTO) 
                 .collect(Collectors.toList());
+    }
+
+    //READ BY HORARIO
+    public List<ConsultaResponse> buscarPorHorarioConsulta (String horario){
+        List<ConsultaEntity> horarioConsulta = consultaRepository.findByHorario(horario);
+
+         return horarioConsulta.stream()
+                .map(this::paraDTO) 
+                .collect(Collectors.toList());
+
+
     }
 
     public ConsultaResponse atualizar(Long id, ConsultaRequest request) {

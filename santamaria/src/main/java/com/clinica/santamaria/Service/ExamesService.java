@@ -95,11 +95,11 @@ private ExamesResponse paraDTO(ExamesEntity exame) {
             exame.getPacienteEntity().getDataNascimento()
         );
     return new ExamesResponse(
-        exame.getExamesId(),      // O ID gerado pelo banco
-        exame.getDataChegada(),   // LocalDate
-        exame.getDataColeta(),    // LocalDate
-        pacienteSimplificado      // DTO SIMPLIFICADO
-    );
+    exame.getExamesId(),
+    exame.getDataColeta(),   // primeiro coleta
+    exame.getDataChegada(),  // depois chegada
+    pacienteSimplificado
+);
 }
 
 }

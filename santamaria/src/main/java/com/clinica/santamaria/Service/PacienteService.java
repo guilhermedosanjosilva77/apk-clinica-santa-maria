@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.clinica.santamaria.Dto.ConsultaSimplificado;
-import com.clinica.santamaria.Dto.ExamesResponse;
 import com.clinica.santamaria.Dto.ExamesSimplificado;
 import com.clinica.santamaria.Dto.PacienteRequest;
 import com.clinica.santamaria.Dto.PacienteResponse;
@@ -29,11 +28,11 @@ public class PacienteService {
     public PacienteResponse criar(PacienteRequest pacienteRequest) {
         PacienteEntity paciente = new PacienteEntity();
 
-        boolean cpfExiste = pacienteRepository.existexistsBycpf(null);
+        boolean cpfExiste = pacienteRepository.existsByCpf(pacienteRequest.cpf());
 
         if (cpfExiste == true) {
             throw new RuntimeException("Conflito: Já existe um paciente cadastrado com esse CPF");
-            
+
         }
 
         paciente.setNome(pacienteRequest.nome());
@@ -46,7 +45,7 @@ public class PacienteService {
         paciente.setEstadoCivil(pacienteRequest.estadoCivil());
         paciente.setNumeroProntuario(pacienteRequest.numeroProntuario());
         paciente.setProfissao(pacienteRequest.profissao());
-        paciente.setProfissao(pacienteRequest.mensagem());
+        paciente.setMensagem(pacienteRequest.mensagem());
 
         pacienteRepository.save(paciente);
 
@@ -78,7 +77,8 @@ public class PacienteService {
     public PacienteResponse atualizar(PacienteRequest pacienteRequest, Long idPaciente) {
         // 1. Busca o paciente existente pelo ID (Garantia de segurança)
         // O .get() extrai o objeto. Se não existir, o Java lança NoSuchElementException
-        PacienteEntity pacienteExistente = pacienteRepository.findById(idPaciente).get();
+        PacienteEntity pacienteExistente = pacienteRepository.findById(idPaciente)
+                .orElseThrow(() -> new RuntimeException("Paciente não encontrado com ID:" + idPaciente));
 
         // 2. Atualiza os campos com os novos dados do Request
         pacienteExistente.setNome(pacienteRequest.nome());
@@ -109,26 +109,29 @@ public class PacienteService {
     // METODO QUE TRANSFORMA ENTITY EM DTO
     private PacienteResponse paraDTO(PacienteEntity paciente) {
 
-        List<ConsultaSimplificado> consultaSimplificado = paciente.getConsultas().stream()
-        .map(consulta -> new ConsultaSimplificado(
-            consulta.getConsultaID(),
-            consulta.getDataConsulta(),
-            consulta.getHorario()
-        ))
-        .collect(Collectors.toList());
+        // ✅ CORRETO — trata null com segurança
+        List<ConsultaSimplificado> consultaSimplificado;
+
+        if (paciente.getConsultas() != null) {
+            consultaSimplificado = paciente.getConsultas().stream()
+                    .map(consulta -> new ConsultaSimplificado(
+                            consulta.getConsultaID(),
+                            consulta.getDataConsulta(),
+                            consulta.getHorario()))
+                    .collect(Collectors.toList());
+        } else {
+            consultaSimplificado = List.of();
+        }
 
         List<ExamesSimplificado> examesSimplificados = new ArrayList<>();
-    if (paciente.getExames() != null) {
-        examesSimplificados = paciente.getExames().stream()
-            .map(exame -> new ExamesSimplificado(
-                exame.getExamesId(),
-                exame.getDataColeta(),
-                exame.getDataChegada()
-            ))
-            .collect(Collectors.toList());
-    }
-
-     
+        if (paciente.getExames() != null) {
+            examesSimplificados = paciente.getExames().stream()
+                    .map(exame -> new ExamesSimplificado(
+                            exame.getExamesId(),
+                            exame.getDataColeta(),
+                            exame.getDataChegada()))
+                    .collect(Collectors.toList());
+        }
 
         return new PacienteResponse(
                 paciente.getIdPaciente(),
@@ -142,7 +145,6 @@ public class PacienteService {
                 paciente.getProfissao(),
                 paciente.getMensagem(),
                 consultaSimplificado,
-                examesSimplificados
-        );
+                examesSimplificados);
     }
 }
