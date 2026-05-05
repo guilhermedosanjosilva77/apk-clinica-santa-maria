@@ -21,20 +21,54 @@ export default function Pacientes() {
   async function carregarPacientesRecentes() {
     setLoadingRecentes(true);
     try {
-      const response = await consultaApi.listar(); 
-      
-      const hoje = new Date();
-      const trintaDiasAtras = new Date();
-      trintaDiasAtras.setDate(hoje.getDate() - 30);
+      const response = await consultaApi.listar();
 
+      const hoje = new Date();
+      hoje.setHours(23, 59, 59, 999);
+      const trintaDiasAtras = new Date();
+      trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
+      trintaDiasAtras.setHours(0, 0, 0, 0);
+
+      // Filtra consultas dos últimos 30 dias
       const recentes = response.data.filter(c => {
-        const dataConsulta = new Date(c.dataConsulta);
+        const dataConsulta = new Date(c.dataConsulta + 'T00:00:00');
         return dataConsulta >= trintaDiasAtras && dataConsulta <= hoje;
       });
 
-      setPacientesRecentes(recentes);
+      // Agrupa por paciente e soma retornos
+      // Estrutura: { [pacienteID]: { nome, dataNascimento, totalRetornos, consultas[] } }
+      const mapaRetornos = {};
+      recentes.forEach(c => {
+        const id   = c.pacienteSimplificado?.idPaciente ?? `sem-id-${c.consultaID}`;
+        const nome = c.pacienteSimplificado?.nome          || 'Não informado';
+        const nasc = c.pacienteSimplificado?.dataNascimento || null;
+
+        if (!mapaRetornos[id]) {
+          mapaRetornos[id] = { nome, dataNascimento: nasc, totalRetornos: 0, consultas: [] };
+        }
+
+        // retorno vem como String ("0", "1") ou null — soma apenas valores numéricos
+        const retornoNum = parseInt(c.retorno);
+        if (!isNaN(retornoNum)) {
+          mapaRetornos[id].totalRetornos += retornoNum;
+        }
+
+        mapaRetornos[id].consultas.push({
+          consultaID:       c.consultaID,
+          dataConsulta:     c.dataConsulta,
+          horario:          c.horario,
+          consultaPreNatal: c.consultaPreNatal,
+        });
+      });
+
+      // Converte para array ordenado por nome
+      const lista = Object.values(mapaRetornos).sort((a, b) =>
+        a.nome.localeCompare(b.nome, 'pt-BR')
+      );
+
+      setPacientesRecentes(lista);
     } catch (e) {
-      console.error("Erro ao carregar recentes:", e);
+      console.error('Erro ao carregar recentes:', e);
     } finally {
       setLoadingRecentes(false);
     }
@@ -110,49 +144,80 @@ export default function Pacientes() {
           ) : pacientesRecentes.length > 0 ? (
             <table className="tabela-pacientes" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ textAlign: 'left', borderBottom: '2px solid #eee' }}>
-                  <th style={{ padding: '10px' }}>Paciente</th>
-                  <th>Data Nascimento</th>
-                  <th>Data Consulta</th>
-                  <th>Horário</th>
-                  <th>Retornos</th>
+                <tr style={{ background: '#f0f4f8', textAlign: 'left', borderBottom: '2px solid #d1d5db' }}>
+                  <th style={{ padding: '10px 12px', fontSize: 13 }}>Paciente</th>
+                  <th style={{ padding: '10px 12px', fontSize: 13 }}>Data de Nascimento</th>
+                  <th style={{ padding: '10px 12px', fontSize: 13 }}>Consultas no Período</th>
+                  <th style={{ padding: '10px 12px', fontSize: 13 }}>Retornos</th>
                 </tr>
               </thead>
               <tbody>
-                {pacientesRecentes.map((c, index) => {
-                  // Lógica para garantir que o nome e data apareçam independente do tipo de cadastro[cite: 8]
-                  const nomeExibicao = c.paciente?.nome || c.nome || "Não informado";
-                  const dataNascExibicao = c.paciente?.dataNascimento || c.dataNascimento || "---";
-                  const temRetorno = (c.paciente?.retornosAtivos || 0) > 0;
+                {pacientesRecentes.map((p, index) => {
+                  const temRetorno = p.totalRetornos > 0;
+                  // Formata data "2026-01-15" → "15/01/2026"
+                  const dataNasc = p.dataNascimento
+                    ? new Date(p.dataNascimento + 'T00:00:00').toLocaleDateString('pt-BR')
+                    : '—';
 
                   return (
-                    <tr key={index} style={{ borderBottom: '1px solid #f2f2f2' }}>
-                      <td style={{ padding: '10px' }}>
-                        <strong>{nomeExibicao}</strong>
+                    <tr key={index} style={{ borderBottom: '1px solid #f0f0f0' }}>
+
+                      {/* Nome */}
+                      <td style={{ padding: '12px 12px' }}>
+                        <strong style={{ fontSize: 13 }}>{p.nome}</strong>
                       </td>
-                      <td>{dataNascExibicao}</td>
-                      <td>{c.dataConsulta}</td>
-                      <td>{c.horario?.substring(0, 5)}</td>
-                      <td>
-                        <span className="badge-retorno" style={{
-                          // Cor verde sólida se houver retornos, cinza se for zero
-                          background: temRetorno ? '#27ae60' : '#f1f5f9',
-                          color: temRetorno ? '#ffffff' : '#64748b',
-                          padding: '4px 10px', 
-                          borderRadius: '12px', 
-                          fontSize: '12px',
-                          fontWeight: temRetorno ? 'bold' : 'normal'
+
+                      {/* Data de nascimento */}
+                      <td style={{ padding: '12px 12px', fontSize: 13, color: '#374151' }}>
+                        {dataNasc}
+                      </td>
+
+                      {/* Quantidade de consultas no período */}
+                      <td style={{ padding: '12px 12px' }}>
+                        <span style={{ fontSize: 13, color: '#374151' }}>
+                          {p.consultas.length} consulta{p.consultas.length !== 1 ? 's' : ''}
+                        </span>
+                        {/* Lista de datas das consultas */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                          {p.consultas.map(c => (
+                            <span key={c.consultaID} style={{
+                              fontSize: 11,
+                              background: c.consultaPreNatal ? '#e8f7ef' : '#e8f0fa',
+                              color:      c.consultaPreNatal ? '#1a7a4a' : '#1e3a5f',
+                              padding: '2px 7px',
+                              borderRadius: 10,
+                              border: `1px solid ${c.consultaPreNatal ? '#b7dfcb' : '#c5d5ee'}`,
+                            }}>
+                              {new Date(c.dataConsulta + 'T00:00:00').toLocaleDateString('pt-BR')}
+                              {c.horario ? ` · ${c.horario.substring(0, 5)}` : ''}
+                              {c.consultaPreNatal ? ' 🤰' : ''}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+
+                      {/* Badge de retornos */}
+                      <td style={{ padding: '12px 12px' }}>
+                        <span style={{
+                          background:  temRetorno ? '#1a7a4a' : '#f1f5f9',
+                          color:       temRetorno ? '#ffffff' : '#64748b',
+                          padding: '5px 12px',
+                          borderRadius: 12,
+                          fontSize: 12,
+                          fontWeight: temRetorno ? 700 : 400,
+                          whiteSpace: 'nowrap',
                         }}>
-                          {c.paciente?.retornosAtivos || 0} Ativos
+                          {p.totalRetornos} {p.totalRetornos === 1 ? 'retorno' : 'retornos'}
                         </span>
                       </td>
+
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           ) : (
-            <p>Nenhuma consulta realizada nos últimos 30 dias.</p>
+            <p style={{ color: '#6b7280', fontSize: 13 }}>Nenhuma consulta realizada nos últimos 30 dias.</p>
           )}
         </div>
       </div>
