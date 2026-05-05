@@ -5,11 +5,19 @@ import { pacienteApi, consultaApi } from '../api/api';
 // ─────────────────────────────────────────────
 // CONFIGURAÇÕES E CONSTANTES
 // ─────────────────────────────────────────────
+
+// Alteração: Intervalos de 15 min, sem 12h, iniciando tarde às 13:15 até 16:00
 const TODOS_HORARIOS = (() => {
   const lista = [];
-  for (let h = 8; h <= 17; h++) {
-    lista.push(`${String(h).padStart(2, '0')}:00`);
-    if (h < 17) lista.push(`${String(h).padStart(2, '0')}:30`);
+  for (let h = 8; h <= 16; h++) {
+    for (let m = 0; m < 60; m += 15) {
+      if (h === 12) continue; 
+      if (h === 13 && m === 0) continue; 
+      if (h === 16 && m > 0) break;
+
+      const horaFormatada = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      lista.push(horaFormatada);
+    }
   }
   return lista;
 })();
@@ -28,7 +36,7 @@ const CONSULTA_VAZIA = {
   dataConsulta: '', 
   horario: '', 
   consultaPreNatal: 'Não',
-  retorno: '',       // preenchido automaticamente se paciente tem consulta nos 30 dias
+  retorno: '',
   coletaExames: 'Não', 
   dataColeta: '', 
   dataChegada: '',
@@ -53,7 +61,6 @@ function mascaraCelular(valor) {
 export default function Cadastro() {
   const location = useLocation();
   
-  // TODOS OS ESTADOS MANTIDOS[cite: 7]
   const [form, setForm] = useState(FORM_VAZIO);
   const [consulta, setConsulta] = useState(CONSULTA_VAZIA);
   const [errosPaciente, setErrosPaciente] = useState({});
@@ -68,16 +75,34 @@ export default function Cadastro() {
   const [loadingBuscaConsulta, setLoadingBuscaConsulta] = useState(false);
   const [horariosOcupados, setHorariosOcupados] = useState({});
 
-  // Retorno: indica se o paciente selecionado já tem consulta nos últimos 30 dias
   const [pacienteTemConsulta30dias, setPacienteTemConsulta30dias] = useState(false);
   const [verificandoRetorno, setVerificandoRetorno] = useState(false);
 
-  // SINCRONIZAÇÃO DE HORÁRIOS MANTIDA[cite: 7]
+  const [consultaParaRemarcar, setConsultaParaRemarcar] = useState(null);
+
   useEffect(() => {
     sincronizarHorarios();
   }, []);
 
-  // ADIÇÃO DA LÓGICA DE EDIÇÃO (SEM REMOVER O RESTO)[cite: 8]
+  useEffect(() => {
+    if (location.state && location.state.consultaParaRemarcar) {
+      const c = location.state.consultaParaRemarcar;
+      setConsultaParaRemarcar(c);
+      setConsulta(prev => ({
+        ...prev,
+        modoConsulta: 'id',
+        pacienteId:   c.pacienteSimplificado?.idPaciente ?? null,
+        nomePaciente: c.pacienteSimplificado?.nome ?? '',
+        dataNascPaciente: c.pacienteSimplificado?.dataNascimento ?? '',
+        dataConsulta: '',
+        horario:      '',
+        consultaPreNatal: c.consultaPreNatal ? 'Sim' : 'Não',
+        retorno:      c.retorno || '',
+      }));
+      mostrarToast(`Remarcando consulta de: ${c.pacienteSimplificado?.nome}`);
+    }
+  }, [location.state]);
+
   useEffect(() => {
     if (location.state && location.state.pacienteParaEdicao) {
       const p = location.state.pacienteParaEdicao;
@@ -149,8 +174,6 @@ export default function Cadastro() {
     } catch (e) { setResultadosBusca([]); } finally { setLoadingBuscaConsulta(false); }
   }
 
-  // Verifica se o paciente selecionado tem consulta nos últimos 30 dias
-  // Usa o campo `retorno` da entity: se alguma consulta tem retorno="1", já usou o retorno
   async function verificarConsulta30dias(pacienteId) {
     setVerificandoRetorno(true);
     setPacienteTemConsulta30dias(false);
@@ -162,15 +185,17 @@ export default function Cadastro() {
       trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
       trintaDiasAtras.setHours(0, 0, 0, 0);
 
-      // Filtra consultas deste paciente nos últimos 30 dias
       const consultasDoPaciente = r.data.filter(c => {
         const mesmoId = c.pacienteSimplificado?.idPaciente === pacienteId;
         const dataC   = new Date(c.dataConsulta + 'T00:00:00');
         return mesmoId && dataC >= trintaDiasAtras && dataC <= hoje;
       });
 
-      if (consultasDoPaciente.length > 0) {
-        // Paciente tem consulta nos últimos 30 dias → direito a 1 retorno
+      const jaUsouRetorno = consultasDoPaciente.some(
+        c => c.retorno && parseInt(c.retorno) >= 1
+      );
+
+      if (consultasDoPaciente.length > 0 && !jaUsouRetorno) {
         setPacienteTemConsulta30dias(true);
         setConsulta(prev => ({ ...prev, retorno: '1' }));
       } else {
@@ -184,7 +209,6 @@ export default function Cadastro() {
     }
   }
 
-  // Seleciona paciente da lista e dispara verificação de retorno
   async function selecionarPaciente(paciente) {
     setConsulta(prev => ({
       ...prev,
@@ -192,10 +216,8 @@ export default function Cadastro() {
       nomePaciente: paciente.nome,
       dataNascPaciente: paciente.dataNascimento || '',
     }));
-    // Fecha lista de resultados
     setResultadosBusca(null);
     setDataBuscaConsulta('');
-    // Verifica se já tem consulta nos 30 dias
     await verificarConsulta30dias(paciente.pacienteID);
   }
 
@@ -206,7 +228,6 @@ export default function Cadastro() {
     }
     setLoadingPaciente(true);
     try {
-      // Lógica de criação/edição mantida
       await pacienteApi.criar({
         ...form,
         numeroProntuario: form.numeroProntuario ? Number(form.numeroProntuario) : null,
@@ -230,16 +251,28 @@ export default function Cadastro() {
     }
     setLoadingConsulta(true);
     try {
-      await consultaApi.criar({
-        dataConsulta:     consulta.dataConsulta,
-        horario:          consulta.horario,
-        consultaPreNatal: consulta.consultaPreNatal === 'Sim',
-        retorno:          consulta.retorno || null,
-        paciente:         consulta.modoConsulta === 'id' ? Number(consulta.pacienteId) : null,
-        nome:             consulta.modoConsulta === 'pre' ? consulta.nomePaciente : null,
-        dataNascimento:   consulta.modoConsulta === 'pre' ? consulta.dataNascPaciente : null,
-      });
-      mostrarToast('✓ Consulta agendada!');
+      if (consultaParaRemarcar) {
+        await consultaApi.atualizar(consultaParaRemarcar.consultaID, {
+          dataConsulta:     consulta.dataConsulta,
+          horario:          consulta.horario,
+          consultaPreNatal: consulta.consultaPreNatal === 'Sim',
+          retorno:          consulta.retorno || null,
+          paciente:         Number(consulta.pacienteId),
+        });
+        mostrarToast('✓ Consulta remarcada!');
+        setConsultaParaRemarcar(null);
+      } else {
+        await consultaApi.criar({
+          dataConsulta:     consulta.dataConsulta,
+          horario:          consulta.horario,
+          consultaPreNatal: consulta.consultaPreNatal === 'Sim',
+          retorno:          consulta.retorno || null,
+          paciente:         consulta.modoConsulta === 'id' ? Number(consulta.pacienteId) : null,
+          nome:             consulta.modoConsulta === 'pre' ? consulta.nomePaciente : null,
+          dataNascimento:   consulta.modoConsulta === 'pre' ? consulta.dataNascPaciente : null,
+        });
+        mostrarToast('✓ Consulta agendada!');
+      }
       setConsulta(CONSULTA_VAZIA);
       setPacienteTemConsulta30dias(false);
       sincronizarHorarios();
@@ -308,7 +341,6 @@ export default function Cadastro() {
         <div className="card-header">📋 Agendamento de Consulta</div>
         <div className="form-grid form-grid-2">
 
-          {/* Tipo de entrada */}
           <div className="form-group">
             <label>Tipo de Entrada</label>
             <select value={consulta.modoConsulta} onChange={e => {
@@ -317,18 +349,18 @@ export default function Cadastro() {
               setResultadosBusca(null);
               setDataBuscaConsulta('');
               setConsulta(prev => ({ ...prev, modoConsulta: e.target.value, pacienteId: null, nomePaciente: '', dataNascPaciente: '', retorno: '' }));
-            }}>
+            }}
+            disabled={!!consultaParaRemarcar}
+            >
               <option value="id">Paciente Cadastrada</option>
               <option value="pre">Cadastro Rápido (Simplificado)</option>
             </select>
           </div>
 
-          {/* ── MODO: PACIENTE CADASTRADA ── */}
           {consulta.modoConsulta === 'id' ? (
             <div className="form-group">
               <label>Buscar Paciente por Data de Nascimento</label>
 
-              {/* Se já selecionou paciente, mostra card com nome e botão de trocar */}
               {consulta.pacienteId ? (
                 <div style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -350,6 +382,7 @@ export default function Cadastro() {
                       setConsulta(prev => ({ ...prev, pacienteId: null, nomePaciente: '', retorno: '' }));
                       setPacienteTemConsulta30dias(false);
                     }}
+                    disabled={!!consultaParaRemarcar}
                   >
                     Trocar
                   </button>
@@ -395,7 +428,6 @@ export default function Cadastro() {
               )}
             </div>
           ) : (
-            /* ── MODO: CADASTRO RÁPIDO ── */
             <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <label>Dados da Paciente</label>
               <input
@@ -412,7 +444,6 @@ export default function Cadastro() {
             </div>
           )}
 
-          {/* Aviso de consulta nos 30 dias — ocupa linha inteira */}
           {pacienteTemConsulta30dias && (
             <div style={{
               gridColumn: '1 / -1',
@@ -429,13 +460,11 @@ export default function Cadastro() {
             </div>
           )}
 
-          {/* Data da consulta */}
           <div className="form-group">
             <label>Data da Consulta *</label>
             <input type="date" value={consulta.dataConsulta} onChange={e => atualizarConsulta('dataConsulta', e.target.value)} />
           </div>
 
-          {/* Horário */}
           <div className="form-group">
             <label>Horário *</label>
             <select value={consulta.horario} onChange={e => atualizarConsulta('horario', e.target.value)}
@@ -446,7 +475,6 @@ export default function Cadastro() {
             </select>
           </div>
 
-          {/* Campo retorno — preenchido automaticamente, mas editável */}
           <div className="form-group">
             <label>
               Retorno
@@ -464,16 +492,16 @@ export default function Cadastro() {
               value={consulta.retorno}
               onChange={e => atualizarConsulta('retorno', e.target.value)}
               style={pacienteTemConsulta30dias ? { borderColor: '#f59e0b', background: '#fffbeb' } : {}}
+              disabled={!!consultaParaRemarcar}
             >
               <option value="">Sem retorno</option>
               <option value="1">1 retorno</option>
             </select>
           </div>
 
-          {/* Consulta pré-natal */}
           <div className="form-group">
             <label>Consulta Pré-natal?</label>
-            <select value={consulta.consultaPreNatal} onChange={e => atualizarConsulta('consultaPreNatal', e.target.value)}>
+            <select value={consulta.consultaPreNatal} onChange={e => atualizarConsulta('consultaPreNatal', e.target.value)} disabled={!!consultaParaRemarcar}>
               <option value="Não">Não</option>
               <option value="Sim">Sim</option>
             </select>
@@ -483,6 +511,7 @@ export default function Cadastro() {
         <div className="btn-row">
           <button className="btn btn-secondary" onClick={() => {
             setConsulta(CONSULTA_VAZIA);
+            setConsultaParaRemarcar(null);
             setPacienteTemConsulta30dias(false);
             setResultadosBusca(null);
             setDataBuscaConsulta('');
@@ -490,7 +519,7 @@ export default function Cadastro() {
             Limpar
           </button>
           <button className="btn btn-success" onClick={cadastrarConsulta} disabled={loadingConsulta}>
-            {loadingConsulta ? 'Agendando...' : 'Confirmar Agendamento'}
+            {loadingConsulta ? (consultaParaRemarcar ? 'Remarcando...' : 'Agendando...') : (consultaParaRemarcar ? 'Confirmar Remarcação' : 'Confirmar Agendamento')}
           </button>
         </div>
       </div>
