@@ -1,6 +1,7 @@
 package com.clinica.santamaria.Service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,35 +30,48 @@ public class ConsultaService {
     public ConsultaResponse criar(ConsultaRequest consultaRequest){
         PacienteEntity paciente;
 
-        //Quando id vem é buscado no banco de dados
+        // 1. Resolve o paciente (por ID ou pré-cadastro)
         if (consultaRequest.paciente() != null) {
             paciente = pacienteRepository.findById(consultaRequest.paciente())
                     .orElseThrow(() -> new RuntimeException("Erro ao encontrar ID"));
-        }
-        else {
-            //Se nao encontrado é feito um pré cadastro da paciente
+        } else {
             paciente = new PacienteEntity();
             paciente.setNome(consultaRequest.nome());
             paciente.setDataNascimento(consultaRequest.dataNascimento());
-            paciente.setDataCadastro(LocalDate.now());  
+            paciente.setDataCadastro(LocalDate.now());
             paciente = pacienteRepository.save(paciente);
         }
+        // 2. Determina o retorno com regra de 30 dias
+        String retornoCalculado;
 
-        //Logica que impede ter mais de 1 retornos por consulta
-        if (consultaRequest.retorno() != null && !consultaRequest.retorno().isBlank()) {
-            if (Integer.parseInt(consultaRequest.retorno()) > 1) {
-                throw new RuntimeException("Não é possível agendar: limite de 1 retornos excedido.");
+        ConsultaEntity ultimaConsulta =
+                consultaRepository.findTopByPacienteEntityOrderByDataConsultaDesc(paciente);
+
+        if (ultimaConsulta == null) {
+            retornoCalculado = "0";
+        } else {
+
+            String retornoUltima = ultimaConsulta.getRetorno();
+            LocalDate dataUltima = ultimaConsulta.getDataConsulta();
+            LocalDate dataNova = consultaRequest.dataConsulta();
+
+            long dias = ChronoUnit.DAYS.between(dataUltima, dataNova);
+
+            if ("0".equals(retornoUltima) && dias <= 30 && dias >= 0) {
+                retornoCalculado = "1";
+            } else {
+                retornoCalculado = "0";
             }
         }
 
-        //Salvar a consulta
+        // 3. Salva a consulta
         ConsultaEntity consultaEntity = new ConsultaEntity();
         consultaEntity.setPacienteEntity(paciente);
         consultaEntity.setDataConsulta(consultaRequest.dataConsulta());
-        consultaEntity.setRetorno(consultaRequest.retorno());
+        consultaEntity.setRetorno(retornoCalculado);
         consultaEntity.setConsultaPreNatal(consultaRequest.consultaPreNatal());
         consultaEntity.setHorario(consultaRequest.horario());
-  
+
         consultaRepository.save(consultaEntity);
 
         return paraDTO(consultaEntity);
@@ -86,25 +100,13 @@ public class ConsultaService {
          return horarioConsulta.stream()
                 .map(this::paraDTO) 
                 .collect(Collectors.toList());
-
-
     }
 
     public ConsultaResponse atualizar(Long id, ConsultaRequest request) {
-        // 1. Verifica se a consulta existe
         ConsultaEntity consulta = consultaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Consulta não encontrada"));
 
-        // 2. Validação do limite de retorno
-        if (request.retorno() != null && !request.retorno().isBlank()) {
-            if (Integer.parseInt(request.retorno()) > 2) {
-                throw new RuntimeException("Não é possível atualizar: limite de 2 retornos excedido.");
-            }
-        }
-
-        // 3. Atualiza os dados da Consulta
         consulta.setDataConsulta(request.dataConsulta());
-        consulta.setRetorno(request.retorno());
         consulta.setConsultaPreNatal(request.consultaPreNatal());
         consulta.setHorario(request.horario());
 

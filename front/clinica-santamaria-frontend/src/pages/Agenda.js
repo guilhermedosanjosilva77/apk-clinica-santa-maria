@@ -57,6 +57,8 @@ export default function Agenda() {
   const [dataNasc, setDataNasc] = useState('');
   const [resultados, setResultados] = useState(null);
   const [loadingBusca, setLoadingBusca] = useState(false);
+  // Mapa de consultaId → { retorno } para enriquecer os ConsultaSimplificado
+  const [mapaConsultas, setMapaConsultas] = useState({});
 
   const [toast, setToast] = useState('');
 
@@ -127,8 +129,22 @@ export default function Agenda() {
     setLoadingBusca(true);
     setResultados(null);
     try {
-      const r = await pacienteApi.buscarPorData(dataNasc);
-      setResultados(r.data ?? []);
+      // Busca pacientes e todas as consultas em paralelo
+      const [rPacientes, rConsultas] = await Promise.all([
+        pacienteApi.buscarPorData(dataNasc),
+        consultaApi.listar(),
+      ]);
+
+      const pacientes = rPacientes.data ?? [];
+
+      // Monta mapa consultaId → retorno a partir do response completo
+      // ConsultaResponse tem consultaID e retorno ("0" ou "1")
+      const mapa = {};
+      (rConsultas.data ?? []).forEach(c => {
+        mapa[c.consultaID] = c.retorno; // "0" = consulta, "1" = retorno
+      });
+      setMapaConsultas(mapa);
+      setResultados(pacientes);
     } catch (e) {
       if (e.response?.status === 404) {
         setResultados([]);
@@ -209,12 +225,47 @@ export default function Agenda() {
                     <div className="alert alert-danger" style={{ marginBottom: 0 }}>Paciente não possui consulta</div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {paciente.consultaSimplificado.map(c => (
-                        <div key={c.consultaId} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px', background: '#f0f7ff', borderRadius: 5, border: '1px solid #d6e4f0' }}>
-                          <span style={{ fontWeight: 700, color: '#1e3a5f', fontSize: 13, minWidth: 90 }}>{fmt(c.dataConsulta)}</span>
-                          {c.horario && <span style={{ fontSize: 12, color: '#555' }}>⏰ {c.horario}</span>}
-                        </div>
-                      ))}
+                      {paciente.consultaSimplificado.map(c => {
+                        // Cruza com o mapa para obter o campo retorno da entity
+                        const retorno = mapaConsultas[c.consultaId];
+                        const ehRetorno = retorno === '1';
+
+                        return (
+                          <div key={c.consultaId} style={{
+                            display: 'flex', alignItems: 'center', gap: 12,
+                            padding: '8px 12px',
+                            background: ehRetorno ? '#fdf6ec' : '#f0f7ff',
+                            borderRadius: 5,
+                            border: `1px solid ${ehRetorno ? '#f5c97a' : '#d6e4f0'}`,
+                          }}>
+                            {/* Data */}
+                            <span style={{ fontWeight: 700, color: '#1e3a5f', fontSize: 13, minWidth: 90 }}>
+                              {fmt(c.dataConsulta)}
+                            </span>
+
+                            {/* Horário */}
+                            {c.horario && (
+                              <span style={{ fontSize: 12, color: '#555' }}>
+                                ⏰ {c.horario}
+                              </span>
+                            )}
+
+                            {/* Badge Consulta / Retorno */}
+                            <span style={{
+                              marginLeft: 'auto',
+                              fontSize: 11,
+                              fontWeight: 700,
+                              padding: '2px 10px',
+                              borderRadius: 10,
+                              background: ehRetorno ? '#f59e0b' : '#1e3a5f',
+                              color: 'white',
+                              whiteSpace: 'nowrap',
+                            }}>
+                              {ehRetorno ? '↩ Retorno' : '📋 Consulta'}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

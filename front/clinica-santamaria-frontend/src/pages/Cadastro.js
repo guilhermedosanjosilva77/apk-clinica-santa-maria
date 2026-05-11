@@ -36,7 +36,6 @@ const CONSULTA_VAZIA = {
   dataConsulta: '', 
   horario: '', 
   consultaPreNatal: 'Não',
-  retorno: '',
   coletaExames: 'Não', 
   dataColeta: '', 
   dataChegada: '',
@@ -74,10 +73,6 @@ export default function Cadastro() {
   const [resultadosBusca, setResultadosBusca] = useState(null);
   const [loadingBuscaConsulta, setLoadingBuscaConsulta] = useState(false);
   const [horariosOcupados, setHorariosOcupados] = useState({});
-
-  const [pacienteTemConsulta30dias, setPacienteTemConsulta30dias] = useState(false);
-  const [verificandoRetorno, setVerificandoRetorno] = useState(false);
-
   const [consultaParaRemarcar, setConsultaParaRemarcar] = useState(null);
 
   useEffect(() => {
@@ -91,13 +86,12 @@ export default function Cadastro() {
       setConsulta(prev => ({
         ...prev,
         modoConsulta: 'id',
-        pacienteId:   c.pacienteSimplificado?.idPaciente ?? null,
-        nomePaciente: c.pacienteSimplificado?.nome ?? '',
+        pacienteId:       c.pacienteSimplificado?.idPaciente ?? null,
+        nomePaciente:     c.pacienteSimplificado?.nome ?? '',
         dataNascPaciente: c.pacienteSimplificado?.dataNascimento ?? '',
         dataConsulta: '',
         horario:      '',
         consultaPreNatal: c.consultaPreNatal ? 'Sim' : 'Não',
-        retorno:      c.retorno || '',
       }));
       mostrarToast(`Remarcando consulta de: ${c.pacienteSimplificado?.nome}`);
     }
@@ -164,8 +158,7 @@ export default function Cadastro() {
 
   async function realizarBuscaPorData(data) {
     setDataBuscaConsulta(data);
-    setPacienteTemConsulta30dias(false);
-    setConsulta(prev => ({ ...prev, pacienteId: null, nomePaciente: '', retorno: '' }));
+    setConsulta(prev => ({ ...prev, pacienteId: null, nomePaciente: '' }));
     if (!data) { setResultadosBusca(null); return; }
     setLoadingBuscaConsulta(true);
     try {
@@ -174,51 +167,15 @@ export default function Cadastro() {
     } catch (e) { setResultadosBusca([]); } finally { setLoadingBuscaConsulta(false); }
   }
 
-  async function verificarConsulta30dias(pacienteId) {
-    setVerificandoRetorno(true);
-    setPacienteTemConsulta30dias(false);
-    try {
-      const r = await consultaApi.listar();
-      const hoje = new Date();
-      hoje.setHours(23, 59, 59, 999);
-      const trintaDiasAtras = new Date();
-      trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
-      trintaDiasAtras.setHours(0, 0, 0, 0);
-
-      const consultasDoPaciente = r.data.filter(c => {
-        const mesmoId = c.pacienteSimplificado?.idPaciente === pacienteId;
-        const dataC   = new Date(c.dataConsulta + 'T00:00:00');
-        return mesmoId && dataC >= trintaDiasAtras && dataC <= hoje;
-      });
-
-      const jaUsouRetorno = consultasDoPaciente.some(
-        c => c.retorno && parseInt(c.retorno) >= 1
-      );
-
-      if (consultasDoPaciente.length > 0 && !jaUsouRetorno) {
-        setPacienteTemConsulta30dias(true);
-        setConsulta(prev => ({ ...prev, retorno: '1' }));
-      } else {
-        setPacienteTemConsulta30dias(false);
-        setConsulta(prev => ({ ...prev, retorno: '' }));
-      }
-    } catch (e) {
-      console.error('Erro ao verificar retorno:', e);
-    } finally {
-      setVerificandoRetorno(false);
-    }
-  }
-
   async function selecionarPaciente(paciente) {
     setConsulta(prev => ({
       ...prev,
-      pacienteId:   paciente.pacienteID,
-      nomePaciente: paciente.nome,
+      pacienteId:       paciente.pacienteID,
+      nomePaciente:     paciente.nome,
       dataNascPaciente: paciente.dataNascimento || '',
     }));
     setResultadosBusca(null);
     setDataBuscaConsulta('');
-    await verificarConsulta30dias(paciente.pacienteID);
   }
 
   async function cadastrarPaciente() {
@@ -256,7 +213,6 @@ export default function Cadastro() {
           dataConsulta:     consulta.dataConsulta,
           horario:          consulta.horario,
           consultaPreNatal: consulta.consultaPreNatal === 'Sim',
-          retorno:          consulta.retorno || null,
           paciente:         Number(consulta.pacienteId),
         });
         mostrarToast('✓ Consulta remarcada!');
@@ -266,7 +222,6 @@ export default function Cadastro() {
           dataConsulta:     consulta.dataConsulta,
           horario:          consulta.horario,
           consultaPreNatal: consulta.consultaPreNatal === 'Sim',
-          retorno:          consulta.retorno || null,
           paciente:         consulta.modoConsulta === 'id' ? Number(consulta.pacienteId) : null,
           nome:             consulta.modoConsulta === 'pre' ? consulta.nomePaciente : null,
           dataNascimento:   consulta.modoConsulta === 'pre' ? consulta.dataNascPaciente : null,
@@ -274,7 +229,6 @@ export default function Cadastro() {
         mostrarToast('✓ Consulta agendada!');
       }
       setConsulta(CONSULTA_VAZIA);
-      setPacienteTemConsulta30dias(false);
       sincronizarHorarios();
     } catch (e) {
       mostrarToast('✗ Erro no agendamento', 'erro');
@@ -344,11 +298,9 @@ export default function Cadastro() {
           <div className="form-group">
             <label>Tipo de Entrada</label>
             <select value={consulta.modoConsulta} onChange={e => {
-              atualizarConsulta('modoConsulta', e.target.value);
-              setPacienteTemConsulta30dias(false);
               setResultadosBusca(null);
               setDataBuscaConsulta('');
-              setConsulta(prev => ({ ...prev, modoConsulta: e.target.value, pacienteId: null, nomePaciente: '', dataNascPaciente: '', retorno: '' }));
+              setConsulta(prev => ({ ...prev, modoConsulta: e.target.value, pacienteId: null, nomePaciente: '', dataNascPaciente: '' }));
             }}
             disabled={!!consultaParaRemarcar}
             >
@@ -371,16 +323,12 @@ export default function Cadastro() {
                     <div style={{ fontWeight: 700, fontSize: 13, color: '#1e3a5f' }}>
                       {consulta.nomePaciente}
                     </div>
-                    {verificandoRetorno && (
-                      <div style={{ fontSize: 11, color: '#6b7280' }}>Verificando retornos...</div>
-                    )}
                   </div>
                   <button
                     className="btn btn-secondary"
                     style={{ fontSize: 11, padding: '3px 10px', height: 26 }}
                     onClick={() => {
-                      setConsulta(prev => ({ ...prev, pacienteId: null, nomePaciente: '', retorno: '' }));
-                      setPacienteTemConsulta30dias(false);
+                      setConsulta(prev => ({ ...prev, pacienteId: null, nomePaciente: '' }));
                     }}
                     disabled={!!consultaParaRemarcar}
                   >
@@ -444,22 +392,6 @@ export default function Cadastro() {
             </div>
           )}
 
-          {pacienteTemConsulta30dias && (
-            <div style={{
-              gridColumn: '1 / -1',
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '10px 14px',
-              background: '#fff8e1',
-              border: '1px solid #f59e0b',
-              borderRadius: 5,
-              fontSize: 13,
-              color: '#92400e',
-              fontWeight: 500,
-            }}>
-              ⚠️ Paciente com consulta dentro de 30 dias — retorno preenchido automaticamente
-            </div>
-          )}
-
           <div className="form-group">
             <label>Data da Consulta *</label>
             <input type="date" value={consulta.dataConsulta} onChange={e => atualizarConsulta('dataConsulta', e.target.value)} />
@@ -476,30 +408,6 @@ export default function Cadastro() {
           </div>
 
           <div className="form-group">
-            <label>
-              Retorno
-              {pacienteTemConsulta30dias && (
-                <span style={{
-                  marginLeft: 8, fontSize: 10, fontWeight: 700,
-                  background: '#f59e0b', color: 'white',
-                  padding: '1px 6px', borderRadius: 8,
-                }}>
-                  AUTO
-                </span>
-              )}
-            </label>
-            <select
-              value={consulta.retorno}
-              onChange={e => atualizarConsulta('retorno', e.target.value)}
-              style={pacienteTemConsulta30dias ? { borderColor: '#f59e0b', background: '#fffbeb' } : {}}
-              disabled={!!consultaParaRemarcar}
-            >
-              <option value="">Sem retorno</option>
-              <option value="1">1 retorno</option>
-            </select>
-          </div>
-
-          <div className="form-group">
             <label>Consulta Pré-natal?</label>
             <select value={consulta.consultaPreNatal} onChange={e => atualizarConsulta('consultaPreNatal', e.target.value)} disabled={!!consultaParaRemarcar}>
               <option value="Não">Não</option>
@@ -512,7 +420,6 @@ export default function Cadastro() {
           <button className="btn btn-secondary" onClick={() => {
             setConsulta(CONSULTA_VAZIA);
             setConsultaParaRemarcar(null);
-            setPacienteTemConsulta30dias(false);
             setResultadosBusca(null);
             setDataBuscaConsulta('');
           }}>
