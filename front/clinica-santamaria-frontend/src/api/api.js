@@ -16,6 +16,12 @@ export const pacienteApi = {
   buscarPorData: (data) =>
     axios.get(`${API}/paciente/buscar`, { params: { data } }),
 
+  buscarPorNome: (nome) =>
+    axios.get(`${API}/paciente/nome`, { params: { nome } }),
+
+  buscarPorCpf: (cpf) =>
+    axios.get(`${API}/paciente/cpf`, { params: { cpf } }),
+
   criar: (dados) =>
     axios.post(`${API}/paciente`, dados),
 

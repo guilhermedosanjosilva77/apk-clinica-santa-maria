@@ -41,6 +41,16 @@ function toDateStr(date) {
 }
 
 // ─────────────────────────────────────────────
+// HELPERS DE FORMATAÇÃO
+// ─────────────────────────────────────────────
+function mascaraCPF(valor) {
+  return valor.replace(/\D/g, '').slice(0, 11)
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+}
+
+// ─────────────────────────────────────────────
 // COMPONENTE
 // ─────────────────────────────────────────────
 export default function Agenda() {
@@ -54,10 +64,11 @@ export default function Agenda() {
   const [consultasPorDia, setConsultasPorDia] = useState({});
   const [loadingSemana, setLoadingSemana] = useState(true);
 
-  const [dataNasc, setDataNasc] = useState('');
-  const [resultados, setResultados] = useState(null);
+  // métodoBusca: 'data' | 'nome' | 'cpf'
+  const [metodoBusca, setMetodoBusca] = useState('data');
+  const [valorBusca,  setValorBusca]  = useState('');
+  const [resultados,  setResultados]  = useState(null);
   const [loadingBusca, setLoadingBusca] = useState(false);
-  // Mapa de consultaId → { retorno } para enriquecer os ConsultaSimplificado
   const [mapaConsultas, setMapaConsultas] = useState({});
 
   const [toast, setToast] = useState('');
@@ -80,7 +91,7 @@ export default function Agenda() {
 
       const mapa = {};
       respostas.forEach(({ dia, consultas }) => {
-        mapa[dia] = consultas;
+        mapa[dia] = consultas.slice().sort((a, b) => (a.horario ?? '').localeCompare(b.horario ?? ''));
       });
       setConsultasPorDia(mapa);
     } catch (e) {
@@ -124,25 +135,46 @@ export default function Agenda() {
     navigate('/cadastro', { state: { consultaParaRemarcar: c } });
   }
 
+  async function abrirCadastroPaciente(c) {
+    const simplificado = c.pacienteSimplificado;
+    if (!simplificado) return;
+    try {
+      const r = await pacienteApi.buscarPorId(simplificado.idPaciente);
+      navigate('/cadastro', { state: { pacienteParaEdicao: r.data } });
+    } catch {
+      // Fallback: navega com o que tiver disponível
+      navigate('/cadastro', { state: { pacienteParaEdicao: simplificado } });
+    }
+  }
+
+  async function editarPaciente(paciente) {
+    const id = paciente.pacienteID ?? paciente.idPaciente;
+    if (!id) return;
+    try {
+      const r = await pacienteApi.buscarPorId(id);
+      navigate('/cadastro', { state: { pacienteParaEdicao: r.data } });
+    } catch {
+      navigate('/cadastro', { state: { pacienteParaEdicao: paciente } });
+    }
+  }
+
   async function buscarPaciente() {
-    if (!dataNasc) return;
+    if (!valorBusca.trim()) return;
     setLoadingBusca(true);
     setResultados(null);
     try {
-      // Busca pacientes e todas as consultas em paralelo
-      const [rPacientes, rConsultas] = await Promise.all([
-        pacienteApi.buscarPorData(dataNasc),
-        consultaApi.listar(),
-      ]);
+      // Escolhe o endpoint conforme o método selecionado
+      let rPacientes;
+      if (metodoBusca === 'data')  rPacientes = await pacienteApi.buscarPorData(valorBusca);
+      if (metodoBusca === 'nome')  rPacientes = await pacienteApi.buscarPorNome(valorBusca);
+      if (metodoBusca === 'cpf')   rPacientes = await pacienteApi.buscarPorCpf(valorBusca);
 
-      const pacientes = rPacientes.data ?? [];
+      const pacientes = rPacientes?.data ?? [];
 
-      // Monta mapa consultaId → retorno a partir do response completo
-      // ConsultaResponse tem consultaID e retorno ("0" ou "1")
+      // Monta mapa consultaId → retorno para enriquecer ConsultaSimplificado
+      const rConsultas = await consultaApi.listar();
       const mapa = {};
-      (rConsultas.data ?? []).forEach(c => {
-        mapa[c.consultaID] = c.retorno; // "0" = consulta, "1" = retorno
-      });
+      (rConsultas.data ?? []).forEach(c => { mapa[c.consultaID] = c.retorno; });
       setMapaConsultas(mapa);
       setResultados(pacientes);
     } catch (e) {
@@ -169,23 +201,77 @@ export default function Agenda() {
   return (
     <div className="page">
 
-      {/* BUSCA POR DATA DE NASCIMENTO */}
+      {/* BUSCA DE PACIENTE */}
       <div className="card">
         <div className="card-header">🔍 Buscar Paciente</div>
+
+        {/* Seletor de método — 3 botões tipo tab */}
+        <div style={{ display: 'flex', gap: 0, padding: '14px 20px 0', borderBottom: '1px solid #e2e8f0' }}>
+          {[
+            { id: 'data', label: '📅 Data de Nascimento' },
+            { id: 'nome', label: '👤 Nome'               },
+            { id: 'cpf',  label: '🪪 CPF'                },
+          ].map(op => (
+            <button
+              key={op.id}
+              onClick={() => { setMetodoBusca(op.id); setValorBusca(''); setResultados(null); }}
+              style={{
+                padding: '8px 18px',
+                fontSize: 12,
+                fontWeight: 600,
+                border: 'none',
+                borderBottom: metodoBusca === op.id ? '2px solid #1e3a5f' : '2px solid transparent',
+                background: 'transparent',
+                color: metodoBusca === op.id ? '#1e3a5f' : '#64748b',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              {op.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Campo de entrada — muda conforme o método */}
         <div className="form-grid form-grid-2" style={{ alignItems: 'flex-end' }}>
           <div className="form-group">
-            <label>Data de Nascimento</label>
-            <input
-              type="date"
-              value={dataNasc}
-              onChange={e => { setDataNasc(e.target.value); setResultados(null); }}
-              onKeyDown={e => e.key === 'Enter' && buscarPaciente()}
-            />
+            <label>
+              {metodoBusca === 'data' && 'Data de Nascimento'}
+              {metodoBusca === 'nome' && 'Nome da Paciente'}
+              {metodoBusca === 'cpf'  && 'CPF'}
+            </label>
+
+            {metodoBusca === 'data' ? (
+              <input
+                type="date"
+                value={valorBusca}
+                onChange={e => { setValorBusca(e.target.value); setResultados(null); }}
+                onKeyDown={e => e.key === 'Enter' && buscarPaciente()}
+              />
+            ) : metodoBusca === 'cpf' ? (
+              <input
+                type="text"
+                placeholder="Ex.: 123.456.789-00"
+                value={valorBusca}
+                onChange={e => { setValorBusca(mascaraCPF(e.target.value)); setResultados(null); }}
+                onKeyDown={e => e.key === 'Enter' && buscarPaciente()}
+                maxLength={14}
+              />
+            ) : (
+              <input
+                type="text"
+                placeholder="Ex.: Maria da Silva"
+                value={valorBusca}
+                onChange={e => setValorBusca(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && buscarPaciente()}
+              />
+            )}
           </div>
+
           <button
             className="btn btn-primary"
             onClick={buscarPaciente}
-            disabled={!dataNasc || loadingBusca}
+            disabled={!valorBusca.trim() || loadingBusca}
           >
             {loadingBusca ? 'Buscando...' : 'Buscar'}
           </button>
@@ -208,7 +294,7 @@ export default function Agenda() {
                       {paciente.numeroProntuario && ` · Prontuário Nº ${paciente.numeroProntuario}`}
                     </div>
                   </div>
-                  <span className="tag tag-green" style={{ marginLeft: 'auto' }}>Encontrado</span>
+                  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}><span className="tag tag-green">Encontrado</span><button className="btn btn-secondary" style={{ fontSize: 12, padding: '5px 14px' }} onClick={() => editarPaciente(paciente)}>✏️ Editar</button></div>
                 </div>
 
                 <div className="form-grid form-grid-3" style={{ padding: '12px 16px 0' }}>
@@ -341,11 +427,41 @@ export default function Agenda() {
                     </div>
 
                     {/* 2. Info Paciente (Cresce para empurrar os botões) */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, color: '#334155', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div
+                      onClick={() => abrirCadastroPaciente(c)}
+                      title="Clique para abrir o cadastro da paciente"
+                      style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
+                      onMouseEnter={e => e.currentTarget.querySelector('.paciente-nome').style.color = '#2563eb'}
+                      onMouseLeave={e => e.currentTarget.querySelector('.paciente-nome').style.color = '#1e3a5f'}
+                    >
+                      {/* Nome */}
+                      <div
+                        className="paciente-nome"
+                        style={{
+                          fontWeight: 600,
+                          color: '#1e3a5f',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          fontSize: 14,
+                          transition: 'color 0.15s',
+                        }}
+                      >
                         {c.pacienteSimplificado?.nome ?? 'Paciente'}
                       </div>
-                      <div style={{ fontSize: 12, color: '#64748b' }}>
+
+                      {/* Linha 2: nascimento + prontuário */}
+                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+                        {c.pacienteSimplificado?.dataNascimento
+                          ? `Nasc.: ${fmt(c.pacienteSimplificado.dataNascimento)}`
+                          : 'Nasc.: —'}
+                        {c.pacienteSimplificado?.numeroProntuario
+                          ? ` · Pront. Nº ${c.pacienteSimplificado.numeroProntuario}`
+                          : ''}
+                      </div>
+
+                      {/* Linha 3: tipo de consulta */}
+                      <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>
                         {c.consultaPreNatal ? '🤰 Pré-natal' : 'Consulta comum'}
                         {c.retorno && ` · Retorno ${c.retorno}`}
                       </div>

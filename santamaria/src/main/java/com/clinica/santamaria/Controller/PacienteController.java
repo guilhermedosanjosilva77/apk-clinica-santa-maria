@@ -58,6 +58,18 @@ public List<PacienteResponse>buscarPorData(@RequestParam("data") @DateTimeFormat
     return pacienteService.buscarPorDataNascimento(data);
 }
 
+//GET BY NOME
+@GetMapping("nome")
+public List<PacienteResponse>buscarPorNome(@RequestParam ("nome") String nome) {
+    return pacienteService.buscarPorNome(nome);
+}
+
+//GET BY CPF
+@GetMapping("cpf")
+public List<PacienteResponse> buscarPorCpf(@RequestParam ("cpf") String cpf) {
+    return pacienteService.buscarPorCpf(cpf);
+}
+
 //PUT
 @PutMapping("/{idPaciente}")
 public PacienteResponse atualizar(@PathVariable Long idPaciente, @RequestBody PacienteRequest pacienteRequest) {

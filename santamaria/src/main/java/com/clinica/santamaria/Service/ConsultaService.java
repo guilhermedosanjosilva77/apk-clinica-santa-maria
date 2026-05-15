@@ -124,6 +124,7 @@ public class ConsultaService {
         PacienteSimplificado pacienteSimplificado = new PacienteSimplificado(
             consulta.getPacienteEntity().getIdPaciente(),
             consulta.getPacienteEntity().getNome(),
+            consulta.getPacienteEntity().getNumeroProntuario(),
             consulta.getPacienteEntity().getDataNascimento()
         );
 

@@ -72,6 +72,30 @@ public class PacienteService {
                 .collect(Collectors.toList());
     }
 
+    //READ BY NOME
+    //BUSCA PACIENTE PELO NOME
+    public List<PacienteResponse> buscarPorNome(String nome){
+        List<PacienteEntity> nomePaciente = pacienteRepository.findByNome(nome);
+
+        return nomePaciente.stream()
+                .map(this::paraDTO) // Usa aquele método auxiliar que criamos
+                .collect(Collectors.toList());
+
+
+    }
+
+    //READ BY CPF
+    //BUSCA POR CPF
+    public List<PacienteResponse> buscarPorCpf(String cpf){
+        List<PacienteEntity> cpfPaciente = pacienteRepository.findByCpf(cpf);
+
+         return cpfPaciente.stream()
+                .map(this::paraDTO) // Usa aquele método auxiliar que criamos
+                .collect(Collectors.toList());
+
+
+    }
+
     // UPDATE
     // Atualiza cadastro da paciente
     public PacienteResponse atualizar(PacienteRequest pacienteRequest, Long idPaciente) {

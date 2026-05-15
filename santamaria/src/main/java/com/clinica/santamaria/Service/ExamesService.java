@@ -92,6 +92,7 @@ private ExamesResponse paraDTO(ExamesEntity exame) {
      PacienteSimplificado pacienteSimplificado = new PacienteSimplificado(
             exame.getPacienteEntity().getIdPaciente(),
             exame.getPacienteEntity().getNome(),
+            exame.getPacienteEntity().getNumeroProntuario(),
             exame.getPacienteEntity().getDataNascimento()
         );
     return new ExamesResponse(

@@ -6,6 +6,7 @@ import java.time.LocalDate;
 public record PacienteSimplificado(
     Long idPaciente,
     String nome,
+    Integer numeroProntuario,
     LocalDate dataNascimento
 ) {
 }
