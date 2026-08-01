@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────
 import axios from 'axios';
 
-const API = 'apk-clinica-santa-maria-production.up.railway.app';
+const API = 'https://apk-clinica-santa-maria-production.up.railway.app';
 
 // ── PACIENTE ──────────────────────────────────
 export const pacienteApi = {
