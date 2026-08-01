@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────
 // pages/Agenda.js
 // ─────────────────────────────────────────────
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { pacienteApi, consultaApi } from '../api/api';
 
@@ -73,10 +73,23 @@ export default function Agenda() {
 
   const [toast, setToast] = useState('');
 
+  // Referência do bloco "Hoje" na agenda semanal, usada para rolar a tela
+  // automaticamente até o dia atual assim que a semana carregar.
+  const refHoje = useRef(null);
+
   useEffect(() => {
     carregarSemana(diasSemanaVisiveis);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [semanaBase]);
+
+  // Assim que a semana atual (a que contém "hoje") termina de carregar,
+  // rola a página até o bloco de hoje — evita precisar descer manualmente.
+  useEffect(() => {
+    if (!loadingSemana && semanaBase === hoje && refHoje.current) {
+      refHoje.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadingSemana, semanaBase]);
 
   async function carregarSemana(dias) {
     setLoadingSemana(true);
@@ -155,6 +168,24 @@ export default function Agenda() {
       navigate('/cadastro', { state: { pacienteParaEdicao: r.data } });
     } catch {
       navigate('/cadastro', { state: { pacienteParaEdicao: paciente } });
+    }
+  }
+
+  async function deletarPaciente(paciente) {
+    const id = paciente.pacienteID ?? paciente.idPaciente;
+    if (!id) return;
+
+    const confirmar = window.confirm(
+      `Tem certeza que deseja excluir o cadastro de "${paciente.nome}"?\nEsta ação não pode ser desfeita.`
+    );
+    if (!confirmar) return;
+
+    try {
+      await pacienteApi.deletar(id);
+      setResultados(prev => prev.filter(p => (p.pacienteID ?? p.idPaciente) !== id));
+      mostrarToast('✓ Paciente excluída');
+    } catch {
+      mostrarToast('Erro ao excluir paciente');
     }
   }
 
@@ -294,7 +325,11 @@ export default function Agenda() {
                       {paciente.numeroProntuario && ` · Prontuário Nº ${paciente.numeroProntuario}`}
                     </div>
                   </div>
-                  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}><span className="tag tag-green">Encontrado</span><button className="btn btn-secondary" style={{ fontSize: 12, padding: '5px 14px' }} onClick={() => editarPaciente(paciente)}>✏️ Editar</button></div>
+                  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span className="tag tag-green">Encontrado</span>
+                    <button className="btn btn-secondary" style={{ fontSize: 12, padding: '5px 14px' }} onClick={() => editarPaciente(paciente)}>✏️ Editar</button>
+                    <button className="btn btn-danger" style={{ fontSize: 12, padding: '5px 14px' }} onClick={() => deletarPaciente(paciente)}>🗑️ Excluir</button>
+                  </div>
                 </div>
 
                 <div className="form-grid form-grid-3" style={{ padding: '12px 16px 0' }}>
@@ -385,7 +420,7 @@ export default function Agenda() {
             const ehHoje = dia === hoje;
 
             return (
-              <div key={dia}>
+              <div key={dia} ref={ehHoje ? refHoje : null}>
                 {/* Cabeçalho do dia */}
                 <div style={{
                   display: 'flex',

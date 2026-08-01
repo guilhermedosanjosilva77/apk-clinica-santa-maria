@@ -33,6 +33,7 @@ const CONSULTA_VAZIA = {
   pacienteId: null,
   nomePaciente: '',
   dataNascPaciente: '',
+  ultimaConsulta: null,
   dataConsulta: '', 
   horario: '', 
   consultaPreNatal: 'Não',
@@ -55,6 +56,27 @@ function mascaraCelular(valor) {
   return valor.replace(/\D/g, '').slice(0, 11)
     .replace(/(\d{2})(\d)/, '($1) $2')
     .replace(/(\d{5})(\d{1,4})$/, '$1-$2');
+}
+
+// Busca a data da consulta mais recente do paciente, independente de ser
+// consulta ou retorno (o DTO ConsultaSimplificado não distingue o tipo).
+// Tenta os nomes de lista mais prováveis retornados pelo PacienteResponse.
+function obterUltimaConsulta(paciente) {
+  if (!paciente) return null;
+  const lista = paciente.consultaSimplificado
+    ?? paciente.consultasSimplificadas
+    ?? paciente.consultas
+    ?? paciente.listaConsultas
+    ?? [];
+
+  if (!Array.isArray(lista) || lista.length === 0) return null;
+
+  const datas = lista
+    .map(c => c.dataConsulta ?? c.data)
+    .filter(Boolean)
+    .sort((a, b) => new Date(b) - new Date(a));
+
+  return datas[0] ?? null;
 }
 
 export default function Cadastro() {
@@ -142,7 +164,16 @@ export default function Cadastro() {
   function mostrarToast(msg, tipo = 'info') {
     setToast(msg);
     setToastTipo(tipo);
-    setTimeout(() => setToast(''), 3800);
+    // Erros ficam mais tempo na tela, já que a mensagem costuma ser mais longa
+    setTimeout(() => setToast(''), tipo === 'erro' ? 6000 : 3800);
+  }
+
+  // Extrai a mensagem específica devolvida pelo backend (GlobalExceptions -> ExceptionDTO).
+  // Tenta os nomes de campo mais prováveis do DTO; se nada bater, cai no fallback.
+  function extrairMensagemErro(e, fallback) {
+    const dados = e?.response?.data;
+    if (!dados) return fallback;
+    return dados.mensagem || dados.message || dados.erro || dados.detail || fallback;
   }
 
   function atualizarPaciente(campo, valor) {
@@ -173,6 +204,7 @@ export default function Cadastro() {
       pacienteId:       paciente.pacienteID,
       nomePaciente:     paciente.nome,
       dataNascPaciente: paciente.dataNascimento || '',
+      ultimaConsulta:   obterUltimaConsulta(paciente),
     }));
     setResultadosBusca(null);
     setDataBuscaConsulta('');
@@ -189,11 +221,21 @@ export default function Cadastro() {
         ...form,
         numeroProntuario: form.numeroProntuario ? Number(form.numeroProntuario) : null,
         dataCadastro: form.dataCadastro || new Date().toISOString().split('T')[0],
+        // Campos opcionais: string vazia vira null.
+        // Importante para estadoCivil, que é Enum no backend e quebra o parse do JSON
+        // se receber "" em vez de null (erro cru do Jackson, não uma mensagem amigável).
+        estadoCivil: form.estadoCivil || null,
+        email: form.email || null,
+        endereco: form.endereco || null,
+        profissao: form.profissao || null,
+        celular: form.celular || null,
+        cpf: form.cpf || null,
+        mensagem: form.mensagem || null,
       });
       mostrarToast('✓ Dados salvos com sucesso!');
       if (!location.state?.pacienteParaEdicao) setForm(FORM_VAZIO);
     } catch (e) {
-      mostrarToast('✗ Erro ao salvar dados do paciente', 'erro');
+      mostrarToast(`✗ ${extrairMensagemErro(e, 'Erro ao salvar dados do paciente')}`, 'erro');
     } finally { setLoadingPaciente(false); }
   }
 
@@ -231,7 +273,7 @@ export default function Cadastro() {
       setConsulta(CONSULTA_VAZIA);
       sincronizarHorarios();
     } catch (e) {
-      mostrarToast('✗ Erro no agendamento', 'erro');
+      mostrarToast(`✗ ${extrairMensagemErro(e, 'Erro no agendamento')}`, 'erro');
     } finally { setLoadingConsulta(false); }
   }
 
@@ -300,7 +342,7 @@ export default function Cadastro() {
             <select value={consulta.modoConsulta} onChange={e => {
               setResultadosBusca(null);
               setDataBuscaConsulta('');
-              setConsulta(prev => ({ ...prev, modoConsulta: e.target.value, pacienteId: null, nomePaciente: '', dataNascPaciente: '' }));
+              setConsulta(prev => ({ ...prev, modoConsulta: e.target.value, pacienteId: null, nomePaciente: '', dataNascPaciente: '', ultimaConsulta: null }));
             }}
             disabled={!!consultaParaRemarcar}
             >
@@ -323,12 +365,17 @@ export default function Cadastro() {
                     <div style={{ fontWeight: 700, fontSize: 13, color: '#1e3a5f' }}>
                       {consulta.nomePaciente}
                     </div>
+                    <div style={{ fontSize: 11, marginTop: 2, color: consulta.ultimaConsulta ? '#374151' : '#9ca3af' }}>
+                      {consulta.ultimaConsulta
+                        ? `Última consulta: ${new Date(consulta.ultimaConsulta + 'T00:00:00').toLocaleDateString('pt-BR')}`
+                        : 'Sem consultas anteriores'}
+                    </div>
                   </div>
                   <button
                     className="btn btn-secondary"
                     style={{ fontSize: 11, padding: '3px 10px', height: 26 }}
                     onClick={() => {
-                      setConsulta(prev => ({ ...prev, pacienteId: null, nomePaciente: '' }));
+                      setConsulta(prev => ({ ...prev, pacienteId: null, nomePaciente: '', ultimaConsulta: null }));
                     }}
                     disabled={!!consultaParaRemarcar}
                   >

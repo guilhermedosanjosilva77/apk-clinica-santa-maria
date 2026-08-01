@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────
 import axios from 'axios';
 
-const API = 'http://localhost:8080';
+const API = 'apk-clinica-santa-maria-production.up.railway.app';
 
 // ── PACIENTE ──────────────────────────────────
 export const pacienteApi = {
